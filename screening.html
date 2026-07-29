@@ -60,6 +60,13 @@ header.top { display: flex; flex-wrap: wrap; align-items: flex-end; justify-cont
 .status-pill { display: inline-flex; align-items: center; gap: 7px; font-weight: 800; border-radius: 8px;
   padding: 6px 13px; font-size: .85rem; letter-spacing: .5px; border: 1.5px solid; }
 .status-pill.big { padding: 8px 15px; font-size: 1rem; }
+.overview-report-date { font-size: .78rem; color: var(--muted); margin: 6px 0 14px; line-height: 1.5; max-width: 720px; }
+.overview-scorecard { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; margin-bottom: 16px; }
+.scorecard-tile { cursor: pointer; text-align: left; font: inherit; border: 1.5px solid; border-radius: 10px; padding: 9px 11px; }
+.scorecard-top { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+.scorecard-icon { font-size: 1rem; font-weight: 800; }
+.scorecard-status { font-size: .68rem; font-weight: 800; letter-spacing: .5px; }
+.scorecard-label { font-size: .78rem; font-weight: 700; color: var(--ink); margin-top: 5px; line-height: 1.3; }
 .overview-title { font-size: 1.3rem; font-weight: 800; margin: 11px 0 5px; }
 .overview-list { list-style: none; padding: 0; margin: 10px 0 0; display: grid; gap: 8px; }
 .overview-list li { cursor: pointer; display: flex; gap: 12px; align-items: flex-start; border-radius: 8px; padding: 10px 14px; }
@@ -774,7 +781,7 @@ function renderCard(metricDef, v) {
 }
 
 /* ================= overview ================= */
-function renderOverview(evals) {
+function renderOverview(evals, vessel) {
   const wrap = document.getElementById('overview');
   wrap.innerHTML = '';
   const flagged = PARAMS
@@ -791,6 +798,28 @@ function renderOverview(evals) {
   pill.style.background = st.bg; pill.style.color = st.fg; pill.style.borderColor = st.bar;
   head.appendChild(pill);
   wrap.appendChild(head);
+
+  wrap.appendChild(el('div', {
+    class: 'overview-report-date',
+    text: 'Berdasarkan laporan TERAKHIR tiap silinder — data ' + vessel.vessel_name + ' s/d ' + fmtDateFull(vessel.date_max) + '. Grafik tetap bisa dijelajah ke tanggal manapun (hover), tapi kesimpulan di bawah selalu memakai titik data terbaru, bukan titik yang sedang di-hover.',
+  }));
+
+  // ---- Ringkasan visual SEMUA 7 parameter sekaligus (bukan cuma yg disorot) ----
+  const scorecard = el('div', { class: 'overview-scorecard' });
+  PARAMS.forEach(p => {
+    const v = evals[p.key];
+    const s = STATUS_STYLE[v.status];
+    const tile = el('button', { class: 'scorecard-tile' });
+    tile.style.background = s.bg; tile.style.borderColor = s.bar;
+    tile.appendChild(el('div', { class: 'scorecard-top' }, [
+      el('span', { class: 'scorecard-icon', text: s.icon, style: `color:${s.fg}` }),
+      el('span', { class: 'scorecard-status', text: s.label, style: `color:${s.fg}` }),
+    ]));
+    tile.appendChild(el('div', { class: 'scorecard-label', text: p.label }));
+    tile.addEventListener('click', () => document.getElementById('card-' + p.key)?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+    scorecard.appendChild(tile);
+  });
+  wrap.appendChild(scorecard);
 
   let title;
   if (overall === 'normal') title = 'Semua parameter dalam batas kebiasaan kapal ini.';
@@ -883,7 +912,7 @@ function renderAll() {
   globalLegendWrap.appendChild(buildLegendRow(vesselUnits, 'global'));
 
   const evals = evaluateAll(vessel);
-  renderOverview(evals);
+  renderOverview(evals, vessel);
   const grid = document.getElementById('card-grid');
   grid.innerHTML = '';
   PARAMS.forEach(p => {
