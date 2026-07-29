@@ -1,0 +1,841 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ringkasan &amp; Screening — Kondisi Piston</title>
+<style>
+:root {
+  --fs: 15px;
+  --ink:      #0F2A3F;
+  --page:     #E7ECEF;
+  --panel:    #FFFFFF;
+  --hair:     #CBD5DC;
+  --muted:    #5A6B76;
+  --accent:   #2563EB;
+  --good-bg:  #E3F2E9; --good-fg: #0F5D34; --good-bar: #1B7A4B;
+  --warn-bg:  #FBF0DA; --warn-fg: #8A5A00; --warn-bar: #B7791F;
+  --crit-bg:  #FADBD6; --crit-fg: #8E2A1E; --crit-bar: #C0392B;
+  --info-bg:  #E8EEF5; --info-fg: #33526E; --info-bar: #6B87A0;
+  --series-1: #2563EB; --series-2: #D97706; --series-3: #059669; --series-4: #EA580C;
+  --series-5: #DB2777; --series-6: #166534; --series-7: #7C3AED; --series-8: #DC2626;
+}
+* { box-sizing: border-box; }
+html { font-size: var(--fs); }
+body { margin: 0; background: var(--page); color: var(--ink); font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+
+/* ---------- nav antar-halaman ---------- */
+.page-nav { background: var(--ink); }
+.page-nav-inner { max-width: 1240px; margin: 0 auto; display: flex; gap: 2px; padding: 0 20px; }
+.page-nav a {
+  display: inline-block; padding: 12px 18px; font-size: .95rem; font-weight: 600;
+  color: #B9C7D1; text-decoration: none; border-bottom: 3px solid transparent;
+}
+.page-nav a.active { color: #fff; border-bottom-color: var(--accent); }
+.page-nav a:hover:not(.active) { color: #fff; }
+
+.wrap { max-width: 1240px; margin: 0 auto; padding: 20px 20px 70px; }
+
+/* ---------- header ---------- */
+header.top { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between;
+  gap: 14px; border-bottom: 3px solid var(--ink); padding-bottom: 16px; margin-bottom: 20px; }
+.eyebrow { font-size: .82rem; letter-spacing: 2px; font-weight: 700; color: var(--muted); text-transform: uppercase; }
+.vessel-name { font-size: 1.9rem; font-weight: 800; line-height: 1.1; margin-top: 3px; }
+.vessel-sub { font-size: .95rem; color: var(--muted); margin-top: 5px; }
+.top-controls { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+.tabs { display: inline-flex; gap: 2px; background: var(--panel); border: 1px solid var(--hair); border-radius: 9px; padding: 3px; }
+.tab-btn { font: inherit; font-size: .85rem; font-weight: 700; color: var(--muted); background: transparent;
+  border: none; border-radius: 6px; padding: 7px 15px; cursor: pointer; }
+.tab-btn[aria-selected="true"] { background: var(--accent); color: #fff; }
+.scale-ctl { display: flex; align-items: center; gap: 6px; }
+.scale-ctl span { font-size: .82rem; color: var(--muted); font-weight: 600; }
+.scale-btn { cursor: pointer; border: 2px solid var(--hair); background: #fff; color: var(--ink);
+  border-radius: 8px; padding: 6px 11px; font-weight: 800; min-width: 40px; }
+.scale-btn[aria-pressed="true"] { border-color: var(--ink); background: var(--ink); color: #fff; }
+
+/* ---------- overview ---------- */
+.overview { background: var(--panel); border: 1px solid var(--hair); border-radius: 12px;
+  padding: 18px 20px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(15,42,63,.08); }
+.overview-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.status-pill { display: inline-flex; align-items: center; gap: 7px; font-weight: 800; border-radius: 8px;
+  padding: 6px 13px; font-size: .85rem; letter-spacing: .5px; border: 1.5px solid; }
+.status-pill.big { padding: 8px 15px; font-size: 1rem; }
+.overview-title { font-size: 1.3rem; font-weight: 800; margin: 11px 0 5px; }
+.overview-list { list-style: none; padding: 0; margin: 10px 0 0; display: grid; gap: 8px; }
+.overview-list li { cursor: pointer; display: flex; gap: 12px; align-items: flex-start; border-radius: 8px; padding: 10px 14px; }
+.overview-list .icon { font-weight: 800; min-width: 20px; text-align: center; }
+.overview-note { font-size: .85rem; color: var(--muted); margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--hair); line-height: 1.55; }
+
+/* ---------- legend bersama ---------- */
+.legend-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 0 18px; }
+.legend-chip { display: inline-flex; align-items: center; gap: 6px; font-size: .8rem; color: var(--muted);
+  background: var(--panel); border: 1px solid var(--hair); border-radius: 999px; padding: 4px 10px 4px 8px;
+  cursor: pointer; user-select: none; }
+.legend-chip .sw { width: 10px; height: 10px; border-radius: 3px; flex: none; }
+.legend-chip[data-active="true"] { outline: 1.5px solid var(--ink); }
+.legend-hint { font-size: .78rem; color: var(--muted); }
+
+/* ---------- grid kartu ---------- */
+.card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(480px, 1fr)); gap: 16px; }
+.pcard { background: var(--panel); border: 1px solid var(--hair); border-radius: 12px; overflow: hidden;
+  box-shadow: 0 1px 3px rgba(15,42,63,.08); border-top: 5px solid var(--good-bar); }
+.pcard-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; padding: 14px 16px 0; }
+.pcard-title-wrap { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.pcard-title { font-size: 1.05rem; font-weight: 800; margin: 0; }
+.pcard-unit { font-size: .78rem; color: var(--muted); }
+.pcard-weak { font-size: .72rem; color: var(--warn-fg); font-weight: 700; background: var(--warn-bg);
+  border-radius: 5px; padding: 1px 6px; }
+.pcard-actions { display: flex; align-items: center; gap: 8px; }
+.expand-btn { cursor: pointer; border: 1px solid var(--hair); background: #fff; color: var(--muted);
+  border-radius: 6px; width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; font-size: .95rem; }
+.expand-btn:hover { color: var(--ink); border-color: var(--ink); }
+.pcard-sub { font-size: .78rem; color: var(--muted); padding: 3px 16px 0; }
+.pcard-chart { padding: 6px 8px 4px 12px; }
+svg.chart-svg { display: block; width: 100%; height: auto; cursor: crosshair; }
+.axis-tick { font-size: 9.5px; fill: var(--muted); }
+.gridline { stroke: #E7ECEF; stroke-width: 1; }
+.baseline { stroke: var(--hair); stroke-width: 1; }
+.series-line { fill: none; stroke-width: 2; opacity: .85; transition: opacity .12s, stroke-width .12s; }
+.series-line.emph { opacity: 1; stroke-width: 3; }
+.series-line.dim { opacity: .12; }
+.qc-marker { fill: none; }
+.qc-marker.dim { opacity: .12; }
+.series-dot { transition: opacity .12s; }
+.crosshair { stroke: var(--muted); stroke-width: 1; pointer-events: none; }
+.hit-rect { fill: transparent; }
+
+.pcard-info { display: grid; grid-template-columns: 1fr 1fr; gap: 0; border-top: 1px solid var(--hair); margin-top: 8px; }
+.info-block { padding: 12px 16px; }
+.info-block + .info-block { border-left: 1px solid var(--hair); }
+.info-label { font-size: .68rem; letter-spacing: 1.4px; font-weight: 800; color: var(--muted); text-transform: uppercase; }
+.info-headline { font-size: .95rem; font-weight: 800; margin-top: 4px; line-height: 1.4; }
+.info-body { font-size: .84rem; color: var(--muted); margin-top: 3px; line-height: 1.5; }
+.action-block { background: var(--warn-bg); }
+.action-block .info-label { color: var(--warn-fg); }
+.action-block.crit { background: var(--crit-bg); }
+.action-block.crit .info-label { color: var(--crit-fg); }
+.action-none { border: 1.5px dashed var(--hair); border-radius: 8px; margin: 12px 16px; padding: 10px 12px;
+  font-size: .84rem; color: var(--good-fg); font-weight: 700; display: flex; align-items: center; gap: 7px; }
+
+.pcard-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px 10px; padding: 10px 16px 14px;
+  border-top: 1px solid var(--hair); font-variant-numeric: tabular-nums; }
+.stat-cell { font-size: .78rem; }
+.stat-cell b { color: var(--muted); font-weight: 600; }
+.stat-cell .v { font-weight: 800; color: var(--ink); margin-left: 4px; }
+
+@media (max-width: 720px) {
+  .card-grid { grid-template-columns: 1fr; }
+  .pcard-info { grid-template-columns: 1fr; }
+  .info-block + .info-block { border-left: none; border-top: 1px solid var(--hair); }
+  .pcard-stats { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* ---------- tooltip ---------- */
+.tooltip { position: fixed; z-index: 60; pointer-events: none; background: var(--panel);
+  border: 1px solid var(--hair); border-radius: 8px; padding: 8px 10px; font-size: .8rem;
+  box-shadow: 0 4px 16px rgba(0,0,0,.18); min-width: 150px; }
+.tooltip[hidden] { display: none; }
+.tooltip .tt-date { font-weight: 800; margin-bottom: 5px; color: var(--ink); }
+.tooltip .tt-row { display: flex; align-items: center; gap: 6px; margin: 2px 0; white-space: nowrap; }
+.tooltip .tt-key { width: 14px; height: 2px; flex: none; }
+.tooltip .tt-label { color: var(--muted); }
+.tooltip .tt-val { margin-left: auto; font-weight: 800; color: var(--ink); font-variant-numeric: tabular-nums; padding-left: 10px; }
+.tooltip .tt-flag { color: var(--crit-fg); font-size: .68rem; margin-left: 4px; }
+
+/* ---------- modal pop-up grafik besar ---------- */
+.modal-backdrop { position: fixed; inset: 0; background: rgba(15,42,63,.55); z-index: 100;
+  display: flex; align-items: center; justify-content: center; padding: 24px; }
+.modal-backdrop[hidden] { display: none; }
+.modal-box { background: var(--panel); border-radius: 14px; max-width: 1080px; width: 100%;
+  max-height: 92vh; overflow: auto; padding: 20px 22px 22px; box-shadow: 0 20px 60px rgba(0,0,0,.35); }
+.modal-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 4px; }
+.modal-title { font-size: 1.25rem; font-weight: 800; }
+.modal-close { cursor: pointer; border: 1px solid var(--hair); background: #fff; color: var(--muted);
+  border-radius: 8px; width: 32px; height: 32px; font-size: 1.1rem; line-height: 1; }
+.modal-close:hover { color: var(--ink); border-color: var(--ink); }
+
+footer.page-footer { max-width: 1240px; margin: 34px auto 0; padding: 0 20px; font-size: .8rem;
+  color: var(--muted); line-height: 1.6; text-align: center; }
+</style>
+</head>
+<body>
+
+<nav class="page-nav"><div class="page-nav-inner">
+  <a href="index.html">Data Mentah</a>
+  <a href="screening.html" class="active">Ringkasan &amp; Screening</a>
+</div></nav>
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <div class="eyebrow">Ringkasan &amp; Screening Kondisi Piston</div>
+      <div class="vessel-name" id="vessel-name">—</div>
+      <div class="vessel-sub" id="vessel-sub">—</div>
+    </div>
+    <div class="top-controls">
+      <div class="tabs" id="vessel-tabs" role="tablist" aria-label="Pilih kapal"></div>
+      <div class="scale-ctl">
+        <span>Ukuran teks</span>
+        <button class="scale-btn" data-scale="15" aria-pressed="true">A</button>
+        <button class="scale-btn" data-scale="17.25">A+</button>
+        <button class="scale-btn" data-scale="19.5">A++</button>
+      </div>
+    </div>
+  </header>
+
+  <section class="overview" id="overview"></section>
+
+  <div class="legend-row" id="shared-legend"></div>
+
+  <div class="card-grid" id="card-grid"></div>
+
+  <footer class="page-footer">
+    Ringkasan ini adalah <b>screening otomatis berbasis aturan</b> dari data operasional mingguan (form E.11) —
+    bukan diagnosis pengukuran fisik. Ambang batas dihitung relatif terhadap riwayat data kapal masing-masing
+    (bukan angka tetap), karena skala tiap parameter berbeda jauh antar kapal/mesin. Tingkat keyakinan tiap
+    parameter ditandai eksplisit pada kartu — jangan disamakan.
+  </footer>
+</div>
+
+<div class="tooltip" id="tooltip" hidden>
+  <div class="tt-date" id="tt-date"></div>
+  <div id="tt-rows"></div>
+</div>
+
+<div class="modal-backdrop" id="modal" hidden>
+  <div class="modal-box">
+    <div class="modal-head">
+      <div class="modal-title" id="modal-title"></div>
+      <button class="modal-close" id="modal-close" aria-label="Tutup">&times;</button>
+    </div>
+    <div class="pcard-sub" id="modal-sub" style="padding-left:0"></div>
+    <div id="modal-chart-wrap" style="margin-top:8px"></div>
+  </div>
+</div>
+
+<script>
+const MONTHS = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+const VESSEL_ORDER = ['MAA','ODI','OGO'];
+let DATA = null;
+let state = { vessel: 'MAA', hoveredUnit: null, isolatedUnit: null };
+
+/* ================= util dasar ================= */
+function el(tag, attrs, children) {
+  const e = document.createElement(tag);
+  if (attrs) for (const k in attrs) {
+    if (k === 'class') e.className = attrs[k];
+    else if (k === 'text') e.textContent = attrs[k];
+    else if (k === 'html') e.innerHTML = attrs[k];
+    else e.setAttribute(k, attrs[k]);
+  }
+  if (children) children.forEach(c => c && e.appendChild(c));
+  return e;
+}
+function svgEl(tag, attrs) {
+  const e = document.createElementNS('http://www.w3.org/2000/svg', tag);
+  if (attrs) for (const k in attrs) e.setAttribute(k, attrs[k]);
+  return e;
+}
+function fmtDateShort(ms) { const d = new Date(ms); return MONTHS[d.getUTCMonth()] + " '" + String(d.getUTCFullYear()).slice(2); }
+function fmtDateFull(dateStr) { const d = new Date(dateStr + 'T00:00:00Z'); return d.getUTCDate() + ' ' + MONTHS[d.getUTCMonth()] + ' ' + d.getUTCFullYear(); }
+function parseMs(dateStr) { return new Date(dateStr + 'T00:00:00Z').getTime(); }
+function hasFlag(colsStr, metricKey) { return !!colsStr && colsStr.split(';').includes(metricKey); }
+function unitSlot(u) { return ((Number(u) - 1) % 8) + 1; }
+function fmt1(v) { return v == null ? '–' : v.toFixed(1); }
+
+function niceTicks(min, max, count) {
+  if (min === max) { min -= 1; max += 1; }
+  const span = max - min;
+  const step0 = span / count;
+  const mag = Math.pow(10, Math.floor(Math.log10(step0)));
+  const norm = step0 / mag;
+  const step = (norm > 5 ? 10 : norm > 2 ? 5 : norm > 1 ? 2 : 1) * mag;
+  const niceMin = Math.floor(min / step) * step;
+  const niceMax = Math.ceil(max / step) * step;
+  const ticks = [];
+  for (let t = niceMin; t <= niceMax + step * 0.001; t += step) ticks.push(t);
+  return ticks;
+}
+
+/* ================= statistik bantu rule-engine ================= */
+function basicStats(vals) {
+  const n = vals.length;
+  if (!n) return { mean: null, std: 0, n: 0 };
+  const mean = vals.reduce((a, b) => a + b, 0) / n;
+  const variance = vals.reduce((a, b) => a + (b - mean) ** 2, 0) / n;
+  return { mean, std: Math.sqrt(variance), n };
+}
+// sebaran historis metrik ini utk kapal aktif (gabungan semua unit, semua laporan)
+// -- dipakai sbg kalibrasi ambang batas RELATIF, karena skala tiap kapal beda jauh.
+function historicalStats(vessel, metricKey) {
+  let vals = [];
+  Object.values(vessel.units).forEach(s => (s[metricKey] || []).forEach(v => { if (v != null) vals.push(v); }));
+  return basicStats(vals);
+}
+// nilai TERBARU (non-null terakhir) per unit
+function latestByUnit(vessel, metricKey) {
+  const out = {};
+  Object.entries(vessel.units).forEach(([u, s]) => {
+    const arr = s[metricKey] || [];
+    for (let i = arr.length - 1; i >= 0; i--) { if (arr[i] != null) { out[u] = arr[i]; break; } }
+  });
+  return out;
+}
+// tren linear kasar N laporan terakhir per unit (nilai/langkah)
+function trendByUnit(vessel, metricKey, window) {
+  window = window || 6;
+  const out = {};
+  Object.entries(vessel.units).forEach(([u, s]) => {
+    const arr = (s[metricKey] || []).filter(v => v != null);
+    const w = arr.slice(-window);
+    out[u] = w.length >= 2 ? (w[w.length - 1] - w[0]) / w.length : 0;
+  });
+  return out;
+}
+function median(arr) {
+  const s = [...arr].sort((a, b) => a - b);
+  const n = s.length;
+  if (!n) return 0;
+  return n % 2 ? s[(n - 1) / 2] : (s[n / 2 - 1] + s[n / 2]) / 2;
+}
+// tren SETIAP unit dibandingkan tren TIPIKAL kapal ini (median lintas unit) --
+// supaya tren yang bergerak bersama seluruh mesin (mis. seluruh P Comp turun bareng
+// krn beban/musim) TIDAK ikut menandai semua silinder; yang ditandai cuma yang
+// mennyimpang dari kebiasaan silinder-silinder lain.
+function relativeTrendByUnit(vessel, metricKey, window) {
+  const raw = trendByUnit(vessel, metricKey, window);
+  const med = median(Object.values(raw));
+  const out = {};
+  Object.keys(raw).forEach(u => { out[u] = raw[u] - med; });
+  return out;
+}
+function fmtUnitList(units) { return units.map(u => 'Unit ' + u).join(', '); }
+
+/* ================= rule-engine per parameter ================= */
+/* Ambang batas dihitung RELATIF thd std historis metrik itu utk kapal aktif --
+   BUKAN angka tetap -- karena skala fuel_pump_index/p_comp/dst beda jauh antar kapal
+   (mis. fuel_pump_index MAA ~5.7, ODI ~71, OGO ~52). Confidence tiap parameter mengikuti
+   diskusi screening awal: P comp/P max/Exhaust Temp = sinyal kuat (Likely); Piston Cooling
+   Outlet Temp = sinyal lemah (Guessing, cuma tren yg berarti); Fuel Pump Index/VIT/JCW =
+   pendukung/informasi. */
+function verdict(status, headline, body, action, flagged, confidence) {
+  return { status, headline, body, action, flagged: flagged || [], confidence: confidence || 'supporting' };
+}
+
+function evalFuelPumpIndex(vessel) {
+  const hist = historicalStats(vessel, 'fuel_pump_index');
+  const latest = latestByUnit(vessel, 'fuel_pump_index');
+  const vals = Object.values(latest);
+  if (!vals.length || hist.std === 0) return verdict('normal', 'Data belum cukup bervariasi.', 'Belum ada sebaran yang berarti untuk dievaluasi.', null, [], 'supporting');
+  const { mean } = basicStats(vals);
+  const spread = Math.max(...vals) - Math.min(...vals);
+  const units = Object.entries(latest).sort((a, b) => a[1] - b[1]);
+  const lo = units[0], hi = units[units.length - 1];
+  const ratio = spread / hist.std;
+  if (ratio > 3) return verdict('perhatian',
+    `Selisih antar-silinder melebar (${spread.toFixed(1)}, ~${ratio.toFixed(1)}x sebaran historis).`,
+    'Rak bahan bakar / beban tiap silinder mulai tidak seragam. Bukan indikator piston langsung, tapi patut disetel ulang.',
+    `Cek governor & fuel rack linkage. Bandingkan Unit ${hi[0]} (tertinggi) vs Unit ${lo[0]} (terendah).`,
+    [hi[0], lo[0]], 'supporting');
+  return verdict('normal', `Semua silinder rapat (selisih ${spread.toFixed(1)}, rata-rata ${mean.toFixed(1)}).`,
+    'Beban terbagi merata antar silinder.', null, [], 'supporting');
+}
+
+function evalVitIndex(vessel) {
+  const hist = historicalStats(vessel, 'vit_index');
+  const latest = latestByUnit(vessel, 'vit_index');
+  const vals = Object.values(latest);
+  if (!vals.length) return verdict('normal', 'Tidak ada data VIT untuk kapal ini.', 'Kemungkinan kapal ini tidak memakai System VIT (Variable Injection Timing) — kolom ini memang hanya diisi untuk kapal yang punya sistem itu.', null, [], 'informational');
+  if (hist.std < 0.02) return verdict('normal', `Nilai tetap (${vals[0].toFixed(1)}) di seluruh riwayat.`,
+    'VIT tidak menunjukkan variasi sama sekali — kemungkinan dicatat sebagai nilai tetap, bukan sinyal kondisi mesin yang aktif berubah.', null, [], 'informational');
+  const spread = Math.max(...vals) - Math.min(...vals);
+  return verdict('normal', `Setting VIT bervariasi wajar (sebaran ${spread.toFixed(1)}).`,
+    'Variable Injection Timing terpasang wajar. Ini murni kolom informasi timing injeksi, bukan alarm kondisi piston.', null, [], 'informational');
+}
+
+function evalPComp(vessel) {
+  const hist = historicalStats(vessel, 'p_comp_kgcm2');
+  const latest = latestByUnit(vessel, 'p_comp_kgcm2');
+  const relTrend = relativeTrendByUnit(vessel, 'p_comp_kgcm2', 6);
+  const vals = Object.values(latest);
+  if (!vals.length || hist.std === 0) return { v: verdict('normal', 'Data belum cukup.', '', null, [], 'strong'), lowUnits: [] };
+  const { mean } = basicStats(vals);
+  const drop = u => mean - latest[u];
+  const warningUnits = Object.keys(latest).filter(u => drop(u) > 2 * hist.std);
+  const watchUnits = Object.keys(latest).filter(u => drop(u) > hist.std && !warningUnits.includes(u));
+  // tren relatif thd median silinder lain -- bukan tren mutlak, supaya seluruh mesin
+  // yang turun bersamaan tidak ikut menandai semua silinder (lihat relativeTrendByUnit).
+  const fallingUnits = Object.keys(latest).filter(u => relTrend[u] < -hist.std * 0.4 && !warningUnits.includes(u));
+  if (warningUnits.length) {
+    const u = warningUnits.sort((a, b) => latest[a] - latest[b])[0];
+    return {
+      v: verdict('warning',
+        `Unit ${u} turun ke ${latest[u].toFixed(1)} kg/cm² (rata-rata silinder lain ${mean.toFixed(1)}).`,
+        'P Comp adalah proksi terbaik yang ada untuk kerapatan ring/liner. Penurunan setajam ini pada satu silinder adalah tanda kebocoran kompresi lewat ring (aus/patah/macet) atau liner aus.',
+        `Jadwalkan inspeksi lubang bilas (scavenge port) Unit ${u}: cek kondisi & gap ring lebih dulu.`,
+        [u], 'strong'),
+      lowUnits: [u],
+    };
+  }
+  if (watchUnits.length || fallingUnits.length) {
+    const flagged = Array.from(new Set([...watchUnits, ...fallingUnits]));
+    return {
+      v: verdict('perhatian', `${fmtUnitList(flagged)} mulai menyimpang dari rata-rata (${mean.toFixed(1)} kg/cm²).`,
+        'Belum keluar dari rentang wajar, tapi arah penyimpangan/tren konsisten — layak dipantau supaya tidak berkembang jadi kebocoran ring.',
+        `Pantau ${fmtUnitList(flagged)} tiap laporan; bandingkan pada beban (Load %) yang setara.`, flagged, 'strong'),
+      lowUnits: flagged,
+    };
+  }
+  return {
+    v: verdict('normal', `Semua silinder rapat & stabil (${Math.min(...vals).toFixed(0)}–${Math.max(...vals).toFixed(0)} kg/cm², rata-rata ${mean.toFixed(1)}).`,
+      'Kerapatan ring/liner terlihat baik di seluruh silinder.', null, [], 'strong'),
+    lowUnits: [],
+  };
+}
+
+function evalPMax(vessel, pcompLowUnits) {
+  const hist = historicalStats(vessel, 'p_max_kgcm2');
+  const latest = latestByUnit(vessel, 'p_max_kgcm2');
+  const vals = Object.values(latest);
+  if (!vals.length || hist.std === 0) return verdict('normal', 'Data belum cukup.', '', null, [], 'strong');
+  const { mean } = basicStats(vals);
+  const dev = u => Math.abs(latest[u] - mean);
+  const flagged = Object.keys(latest).filter(u => dev(u) > 2 * hist.std);
+  if (flagged.length) {
+    const u = flagged.sort((a, b) => dev(b) - dev(a))[0];
+    const alsoLowComp = pcompLowUnits.includes(u);
+    if (alsoLowComp) {
+      return verdict('warning', `Unit ${u} juga menyimpang di P Max (${latest[u].toFixed(1)} kg/cm², rata-rata ${mean.toFixed(1)}).`,
+        `P Comp Unit ${u} sudah rendah DAN P Max ikut menyimpang — dua sinyal ini saling menguatkan dugaan piston/ring, bukan kebetulan sinyal tunggal.`,
+        `Prioritaskan Unit ${u} pada inspeksi berikutnya bersamaan dengan temuan P Comp.`, [u], 'strong');
+    }
+    return verdict('perhatian', `Unit ${u} menyimpang di P Max (${latest[u].toFixed(1)} kg/cm², rata-rata ${mean.toFixed(1)}) tapi P Comp normal.`,
+      'Ini cara memisahkan penyebab: P Comp normal & P Max menyimpang menunjuk ke injeksi/timing, bukan piston/ring.',
+      `Cek injektor & timing bahan bakar Unit ${u} — bukan piston.`, [u], 'strong');
+  }
+  return verdict('normal', `Tekanan pembakaran seragam (${Math.min(...vals).toFixed(0)}–${Math.max(...vals).toFixed(0)} kg/cm²).`,
+    'Injeksi & pembakaran tiap silinder konsisten dengan P Comp.', null, [], 'strong');
+}
+
+function evalExhaustTemp(vessel) {
+  const hist = historicalStats(vessel, 'exhaust_temp_c');
+  const latest = latestByUnit(vessel, 'exhaust_temp_c');
+  const vals = Object.values(latest);
+  if (!vals.length || hist.std === 0) return verdict('normal', 'Data belum cukup.', '', null, [], 'strong');
+  const { mean } = basicStats(vals);
+  const hot = Object.keys(latest).filter(u => latest[u] - mean > 2.5 * hist.std);
+  const warm = Object.keys(latest).filter(u => latest[u] - mean > 1.3 * hist.std && !hot.includes(u));
+  if (hot.length) {
+    const u = hot.sort((a, b) => latest[b] - latest[a])[0];
+    return verdict('warning', `Unit ${u} panas: ${latest[u].toFixed(0)}°C (rata-rata ${mean.toFixed(0)}°C).`,
+      'Penyimpangan setajam ini bisa berarti blow-by (kebocoran gas pembakaran lewat ring), kebocoran katup buang, atau injektor bermasalah.',
+      `Periksa injektor & katup buang Unit ${u} lebih dulu; korelasikan dengan P Max-nya.`, [u], 'strong');
+  }
+  if (warm.length) return verdict('perhatian', `${fmtUnitList(warm)} sedikit lebih panas dari rata-rata (${mean.toFixed(0)}°C).`,
+    'Belum berarti blow-by, tapi arah penyimpangan layak dicatat.', `Pantau ${fmtUnitList(warm)} minggu berikutnya.`, warm, 'strong');
+  return verdict('normal', `Suhu buang seragam (${Math.min(...vals).toFixed(0)}–${Math.max(...vals).toFixed(0)}°C).`,
+    'Tidak ada sinyal blow-by dari suhu buang.', null, [], 'strong');
+}
+
+function evalJcwTemp(vessel) {
+  const hist = historicalStats(vessel, 'jcw_temp_c');
+  const latest = latestByUnit(vessel, 'jcw_temp_c');
+  const vals = Object.values(latest);
+  if (!vals.length || hist.std === 0) return verdict('normal', 'Data belum cukup.', '', null, [], 'supporting');
+  const hiUnit = Object.entries(latest).sort((a, b) => b[1] - a[1])[0];
+  if (hiUnit[1] - hist.mean > 2.2 * hist.std) return verdict('perhatian', `Unit ${hiUnit[0]} mencapai ${hiUnit[1].toFixed(0)}°C (biasanya rata-rata ${hist.mean.toFixed(0)}°C).`,
+    'Pendinginan jaket air pada silinder itu mulai kurang optimal dibanding kebiasaan kapal ini.',
+    `Cek aliran & suhu air pendingin jaket Unit ${hiUnit[0]}.`, [hiUnit[0]], 'supporting');
+  return verdict('normal', `Suhu air jaket dalam kebiasaan kapal ini (maks ${Math.max(...vals).toFixed(0)}°C).`,
+    'Pendinginan silinder normal.', null, [], 'supporting');
+}
+
+// Piston Cooling Outlet Temp -- SINYAL LEMAH (per diskusi screening awal): terlalu banyak
+// variabel lain yang memengaruhi angka mutlak. Yang berarti cuma TREN, bukan sekali ukur --
+// jadi status di sini sengaja DIBATASI maksimal 'perhatian', tidak pernah 'warning'.
+function evalPistonCoolingOutlet(vessel) {
+  const hist = historicalStats(vessel, 'piston_cooling_outlet_temp_c');
+  // tren relatif thd median silinder lain (lihat relativeTrendByUnit) -- hindari
+  // seluruh silinder ikut ke-flag krn tren musiman/beban yg memengaruhi semuanya.
+  const relTrend = relativeTrendByUnit(vessel, 'piston_cooling_outlet_temp_c', 8);
+  const latest = latestByUnit(vessel, 'piston_cooling_outlet_temp_c');
+  const CAVEAT = 'Sinyal ini LEMAH: kenaikan bisa berarti aliran pendingin torak berkurang atau beban panas crown naik, tapi terlalu banyak variabel lain yang berpengaruh. Yang berarti adalah TREN dan selisih in–out, bukan angka mutlak dari satu kali ukur.';
+  if (!Object.keys(latest).length || hist.std === 0) return verdict('normal', 'Data belum cukup.', CAVEAT, null, [], 'weak');
+  const rising = Object.keys(relTrend).filter(u => relTrend[u] > hist.std * 0.35);
+  if (rising.length) {
+    return verdict('perhatian', `${fmtUnitList(rising)} tren naik dalam 8 laporan terakhir.`,
+      CAVEAT, `Pantau tren Unit ${rising.join(', ')} beberapa laporan ke depan sebelum menyimpulkan apa pun.`, rising, 'weak');
+  }
+  return verdict('normal', 'Tidak ada tren naik yang menonjol pada silinder manapun.', CAVEAT, null, [], 'weak');
+}
+
+const PARAMS = [
+  { key: 'fuel_pump_index', label: 'Fuel Pump Index', unit: 'tanpa satuan', dec: 1 },
+  { key: 'vit_index', label: 'VIT Index', unit: 'tanpa satuan', dec: 1 },
+  { key: 'p_comp_kgcm2', label: 'P Comp', unit: 'kg/cm²', dec: 1 },
+  { key: 'p_max_kgcm2', label: 'P Max', unit: 'kg/cm²', dec: 1 },
+  { key: 'exhaust_temp_c', label: 'Exhaust Temp', unit: '°C', dec: 0 },
+  { key: 'jcw_temp_c', label: 'JCW Temp', unit: '°C', dec: 0 },
+  { key: 'piston_cooling_outlet_temp_c', label: 'Piston Cooling Outlet Temp', unit: '°C', dec: 0 },
+];
+const STATUS_STYLE = {
+  normal:    { bg: 'var(--good-bg)', fg: 'var(--good-fg)', bar: 'var(--good-bar)', label: 'NORMAL', icon: '✓' },
+  perhatian: { bg: 'var(--warn-bg)', fg: 'var(--warn-fg)', bar: 'var(--warn-bar)', label: 'PERHATIAN', icon: '▲' },
+  warning:   { bg: 'var(--crit-bg)', fg: 'var(--crit-fg)', bar: 'var(--crit-bar)', label: 'WASPADA', icon: '●' },
+};
+const RANK = { normal: 0, perhatian: 1, warning: 2 };
+
+function evaluateAll(vessel) {
+  const pcomp = evalPComp(vessel);
+  const out = {
+    fuel_pump_index: evalFuelPumpIndex(vessel),
+    vit_index: evalVitIndex(vessel),
+    p_comp_kgcm2: pcomp.v,
+    p_max_kgcm2: evalPMax(vessel, pcomp.lowUnits),
+    exhaust_temp_c: evalExhaustTemp(vessel),
+    jcw_temp_c: evalJcwTemp(vessel),
+    piston_cooling_outlet_temp_c: evalPistonCoolingOutlet(vessel),
+  };
+  return out;
+}
+
+/* ================= emphasis unit (legend <-> semua chart) ================= */
+function activeUnit() { return state.hoveredUnit ?? state.isolatedUnit; }
+function refreshEmphasis() {
+  const active = activeUnit();
+  document.querySelectorAll('[data-unit-id]').forEach(node => {
+    const u = node.getAttribute('data-unit-id');
+    node.classList.remove('dim', 'emph');
+    if (active === null) return;
+    node.classList.add(u === active ? 'emph' : 'dim');
+  });
+}
+
+/* ================= tooltip ================= */
+const ttEl = document.getElementById('tooltip');
+const ttDate = document.getElementById('tt-date');
+const ttRows = document.getElementById('tt-rows');
+function showTooltip(x, y, dateLabel, rows) {
+  ttDate.textContent = dateLabel;
+  ttRows.innerHTML = '';
+  rows.forEach(r => {
+    const row = el('div', { class: 'tt-row' });
+    const key = el('span', { class: 'tt-key' }); key.style.background = r.color;
+    row.append(key, el('span', { class: 'tt-label', text: r.label }), el('span', { class: 'tt-val', text: r.value }));
+    if (r.flag) row.appendChild(el('span', { class: 'tt-flag', text: r.flag }));
+    ttRows.appendChild(row);
+  });
+  ttEl.hidden = false;
+  const pad = 16;
+  let left = x + pad, top = y + pad;
+  if (left + 220 > window.innerWidth) left = x - 220 - pad;
+  if (top + 160 > window.innerHeight) top = y - 160 - pad;
+  ttEl.style.left = left + 'px'; ttEl.style.top = top + 'px';
+}
+function hideTooltip() { ttEl.hidden = true; }
+
+/* ================= chart SVG (dipakai di kartu & modal, ukuran beda) ================= */
+function buildChart(metricDef, opts) {
+  opts = opts || {};
+  const W = opts.width || 620, H = opts.height || 220;
+  const padL = 46, padR = 14, padT = 10, padB = 26;
+  const plotW = W - padL - padR, plotH = H - padT - padB;
+
+  const vessel = DATA.vessels[state.vessel];
+  const units = Object.keys(vessel.units).map(Number).sort((a, b) => a - b);
+  const dates = vessel.units[units[0]].dates;
+  const dateMs = dates.map(parseMs);
+
+  let vmin = Infinity, vmax = -Infinity;
+  units.forEach(u => (vessel.units[u][metricDef.key] || []).forEach(v => { if (v !== null) { vmin = Math.min(vmin, v); vmax = Math.max(vmax, v); } }));
+  if (!isFinite(vmin)) { vmin = 0; vmax = 1; }
+  const padV = (vmax - vmin) * 0.12 || 1;
+  const yMin = vmin - padV, yMax = vmax + padV;
+  const xMs0 = dateMs[0], xMs1 = dateMs[dateMs.length - 1];
+  const xScale = ms => padL + (xMs1 === xMs0 ? 0 : (ms - xMs0) / (xMs1 - xMs0)) * plotW;
+  const yScale = v => padT + plotH - ((v - yMin) / (yMax - yMin)) * plotH;
+
+  const svg = svgEl('svg', { class: 'chart-svg', viewBox: `0 0 ${W} ${H}`, role: 'img', 'aria-label': metricDef.label + ' per cylinder terhadap waktu' });
+
+  niceTicks(yMin, yMax, 4).forEach(t => {
+    if (t < yMin || t > yMax) return;
+    const y = yScale(t);
+    svg.appendChild(svgEl('line', { class: 'gridline', x1: padL, x2: W - padR, y1: y, y2: y }));
+    const txt = svgEl('text', { class: 'axis-tick', x: padL - 6, y: y + 3, 'text-anchor': 'end' });
+    txt.textContent = t.toFixed(metricDef.dec);
+    svg.appendChild(txt);
+  });
+  const xTickCount = 5;
+  for (let i = 0; i < xTickCount; i++) {
+    const ms = xMs0 + (xMs1 - xMs0) * (i / (xTickCount - 1));
+    const x = xScale(ms);
+    const txt = svgEl('text', { class: 'axis-tick', x, y: H - 6, 'text-anchor': i === 0 ? 'start' : i === xTickCount - 1 ? 'end' : 'middle' });
+    txt.textContent = fmtDateShort(ms);
+    svg.appendChild(txt);
+  }
+  svg.appendChild(svgEl('line', { class: 'baseline', x1: padL, x2: W - padR, y1: padT + plotH, y2: padT + plotH }));
+
+  units.forEach(u => {
+    const slot = unitSlot(u);
+    const s = vessel.units[u];
+    let d = '';
+    dateMs.forEach((ms, i) => {
+      const v = s[metricDef.key][i];
+      if (v === null) return;
+      d += (d === '' ? 'M' : 'L') + xScale(ms).toFixed(2) + ' ' + yScale(v).toFixed(2) + ' ';
+    });
+    svg.appendChild(svgEl('path', { class: 'series-line', d, stroke: `var(--series-${slot})`, 'data-unit-id': String(u) }));
+    dateMs.forEach((ms, i) => {
+      const v = s[metricDef.key][i];
+      if (v === null) return;
+      if (hasFlag(s.qc_anomali_cols[i], metricDef.key)) svg.appendChild(svgEl('circle', { class: 'qc-marker', cx: xScale(ms), cy: yScale(v), r: 5, stroke: 'var(--crit-bar)', 'stroke-width': 1.6, 'data-unit-id': String(u) }));
+      else if (hasFlag(s.qc_sistematik_cols[i], metricDef.key)) svg.appendChild(svgEl('circle', { class: 'qc-marker', cx: xScale(ms), cy: yScale(v), r: 4, stroke: 'var(--muted)', 'stroke-width': 1.3, 'data-unit-id': String(u) }));
+    });
+  });
+
+  const crosshair = svgEl('line', { class: 'crosshair', x1: padL, x2: padL, y1: padT, y2: padT + plotH, opacity: 0 });
+  svg.appendChild(crosshair);
+  const dotsGroup = svgEl('g', { opacity: 0 });
+  const dots = {};
+  units.forEach(u => {
+    const dot = svgEl('circle', { r: 4, fill: `var(--series-${unitSlot(u)})`, stroke: 'var(--panel)', 'stroke-width': 2, 'data-unit-id': String(u), class: 'series-dot' });
+    dots[u] = dot; dotsGroup.appendChild(dot);
+  });
+  svg.appendChild(dotsGroup);
+
+  const hitRect = svgEl('rect', { class: 'hit-rect', x: padL, y: padT, width: plotW, height: plotH });
+  svg.addEventListener('pointermove', evt => {
+    const rect = svg.getBoundingClientRect();
+    const scaleX = W / rect.width;
+    const localX = (evt.clientX - rect.left) * scaleX;
+    const t = Math.max(0, Math.min(1, (localX - padL) / plotW));
+    const targetMs = xMs0 + t * (xMs1 - xMs0);
+    let idx = 0, best = Infinity;
+    dateMs.forEach((ms, i) => { const dd = Math.abs(ms - targetMs); if (dd < best) { best = dd; idx = i; } });
+    const x = xScale(dateMs[idx]);
+    crosshair.setAttribute('x1', x); crosshair.setAttribute('x2', x); crosshair.setAttribute('opacity', 1);
+    dotsGroup.setAttribute('opacity', 1);
+    const rows = [];
+    units.forEach(u => {
+      const s = vessel.units[u];
+      const v = s[metricDef.key][idx];
+      const dot = dots[u];
+      if (v === null) dot.setAttribute('opacity', 0);
+      else { dot.setAttribute('opacity', 1); dot.setAttribute('cx', x); dot.setAttribute('cy', yScale(v)); }
+      let flag = '';
+      if (hasFlag(s.qc_anomali_cols[idx], metricDef.key)) flag = 'anomali';
+      else if (hasFlag(s.qc_sistematik_cols[idx], metricDef.key)) flag = 'sistematik';
+      rows.push({ color: `var(--series-${unitSlot(u)})`, label: 'Unit ' + u, value: v === null ? '–' : v.toFixed(metricDef.dec) + (metricDef.unit ? ' ' + metricDef.unit : ''), flag });
+    });
+    showTooltip(evt.clientX, evt.clientY, fmtDateFull(dates[idx]), rows);
+  });
+  svg.addEventListener('pointerleave', () => { crosshair.setAttribute('opacity', 0); dotsGroup.setAttribute('opacity', 0); hideTooltip(); });
+  svg.appendChild(hitRect);
+  return svg;
+}
+
+/* ================= modal pop-up ================= */
+const modalEl = document.getElementById('modal');
+const modalTitle = document.getElementById('modal-title');
+const modalSub = document.getElementById('modal-sub');
+const modalChartWrap = document.getElementById('modal-chart-wrap');
+function openModal(metricDef) {
+  modalTitle.textContent = metricDef.label + ' — ' + DATA.vessels[state.vessel].vessel_name;
+  modalSub.textContent = (metricDef.unit || 'tanpa satuan') + ' · seluruh silinder · sumbu waktu';
+  modalChartWrap.innerHTML = '';
+  modalChartWrap.appendChild(buildChart(metricDef, { width: 1000, height: 440 }));
+  modalEl.hidden = false;
+  refreshEmphasis();
+}
+function closeModal() { modalEl.hidden = true; modalChartWrap.innerHTML = ''; }
+document.getElementById('modal-close').addEventListener('click', closeModal);
+modalEl.addEventListener('click', evt => { if (evt.target === modalEl) closeModal(); });
+document.addEventListener('keydown', evt => { if (evt.key === 'Escape' && !modalEl.hidden) closeModal(); });
+
+/* ================= kartu parameter ================= */
+function renderCard(metricDef, v) {
+  const st = STATUS_STYLE[v.status];
+  const card = el('div', { class: 'pcard' });
+  card.style.borderTopColor = st.bar;
+
+  const titleWrap = el('div', { class: 'pcard-title-wrap' }, [
+    el('h3', { class: 'pcard-title', text: metricDef.label }),
+    el('span', { class: 'pcard-unit', text: metricDef.unit }),
+  ]);
+  if (v.confidence === 'weak') titleWrap.appendChild(el('span', { class: 'pcard-weak', text: 'sinyal lemah' }));
+
+  const pill = el('span', { class: 'status-pill' }, [document.createTextNode(st.icon + ' ' + st.label)]);
+  pill.style.background = st.bg; pill.style.color = st.fg; pill.style.borderColor = st.bar;
+
+  const expandBtn = el('button', { class: 'expand-btn', title: 'Perbesar grafik', 'aria-label': 'Perbesar grafik', html: '&#10529;' });
+  expandBtn.addEventListener('click', () => openModal(metricDef));
+
+  const head = el('div', { class: 'pcard-head' }, [
+    titleWrap,
+    el('div', { class: 'pcard-actions' }, [pill, expandBtn]),
+  ]);
+  card.appendChild(head);
+  card.appendChild(el('div', { class: 'pcard-sub', text: 'Semua silinder ditampilkan' }));
+
+  const chartWrap = el('div', { class: 'pcard-chart' });
+  chartWrap.appendChild(buildChart(metricDef, { width: 620, height: 210 }));
+  card.appendChild(chartWrap);
+
+  const findingBlock = el('div', { class: 'info-block' }, [
+    el('div', { class: 'info-label', text: 'Temuan' }),
+    el('div', { class: 'info-headline', text: v.headline }),
+    v.body ? el('div', { class: 'info-body', text: v.body }) : null,
+  ]);
+
+  const info = el('div', { class: 'pcard-info' });
+  info.appendChild(findingBlock);
+  if (v.action) {
+    info.appendChild(el('div', { class: 'info-block action-block' + (v.status === 'warning' ? ' crit' : '') }, [
+      el('div', { class: 'info-label', text: 'Tindakan' }),
+      el('div', { class: 'info-headline', text: v.action }),
+    ]));
+  } else {
+    info.appendChild(el('div', { class: 'info-block' }, [
+      el('div', { class: 'action-none', html: '&#10003; Tidak ada tindakan korektif.' }),
+    ]));
+  }
+  card.appendChild(info);
+
+  const vessel = DATA.vessels[state.vessel];
+  const latest = latestByUnit(vessel, metricDef.key);
+  const entries = Object.entries(latest);
+  if (entries.length) {
+    const vals = entries.map(e => e[1]);
+    const mean = vals.reduce((a, b) => a + b, 0) / vals.length;
+    const spread = Math.max(...vals) - Math.min(...vals);
+    const hi = entries.reduce((a, b) => (b[1] > a[1] ? b : a));
+    const lo = entries.reduce((a, b) => (b[1] < a[1] ? b : a));
+    const stats = el('div', { class: 'pcard-stats' }, [
+      el('div', { class: 'stat-cell' }, [el('b', { text: 'Rata-rata' }), el('span', { class: 'v', text: fmt1(mean) })]),
+      el('div', { class: 'stat-cell' }, [el('b', { text: 'Sebaran' }), el('span', { class: 'v', text: fmt1(spread) })]),
+      el('div', { class: 'stat-cell' }, [el('b', { text: 'Tertinggi' }), el('span', { class: 'v', text: 'U' + hi[0] + ' · ' + fmt1(hi[1]) })]),
+      el('div', { class: 'stat-cell' }, [el('b', { text: 'Terendah' }), el('span', { class: 'v', text: 'U' + lo[0] + ' · ' + fmt1(lo[1]) })]),
+    ]);
+    card.appendChild(stats);
+  }
+  return card;
+}
+
+/* ================= overview ================= */
+function renderOverview(evals) {
+  const wrap = document.getElementById('overview');
+  wrap.innerHTML = '';
+  const flagged = PARAMS
+    .map(p => ({ ...p, v: evals[p.key] }))
+    .filter(p => p.v.status !== 'normal')
+    .sort((a, b) => RANK[b.v.status] - RANK[a.v.status]);
+  const overall = flagged.some(p => p.v.status === 'warning') ? 'warning' : flagged.length ? 'perhatian' : 'normal';
+  const st = STATUS_STYLE[overall];
+
+  const head = el('div', { class: 'overview-head' }, [
+    el('span', { style: 'font-size:.8rem;letter-spacing:2px;font-weight:700;color:var(--muted);text-transform:uppercase', text: 'Kondisi Keseluruhan' }),
+  ]);
+  const pill = el('span', { class: 'status-pill big' }, [document.createTextNode(st.icon + ' ' + st.label)]);
+  pill.style.background = st.bg; pill.style.color = st.fg; pill.style.borderColor = st.bar;
+  head.appendChild(pill);
+  wrap.appendChild(head);
+
+  let title;
+  if (overall === 'normal') title = 'Semua parameter dalam batas kebiasaan kapal ini.';
+  else if (overall === 'warning') title = `${flagged.filter(p => p.v.status === 'warning').length} parameter perlu tindakan segera, ${flagged.length} total disorot.`;
+  else title = `${flagged.length} parameter perlu dipantau.`;
+  wrap.appendChild(el('div', { class: 'overview-title', text: title }));
+
+  if (flagged.length) {
+    const list = el('ul', { class: 'overview-list' });
+    flagged.forEach(p => {
+      const s = STATUS_STYLE[p.v.status];
+      const li = el('li', {});
+      li.style.background = s.bg;
+      li.appendChild(el('span', { class: 'icon', text: s.icon, style: `color:${s.fg}` }));
+      const textWrap = el('span', {});
+      const strong = el('b', { text: p.label + ': ' }); textWrap.appendChild(strong);
+      textWrap.appendChild(document.createTextNode(p.v.headline + ' '));
+      textWrap.appendChild(el('span', { style: 'color:var(--muted)', text: '→ klik untuk lihat grafik' }));
+      li.appendChild(textWrap);
+      li.addEventListener('click', () => document.getElementById('card-' + p.key)?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+      list.appendChild(li);
+    });
+    wrap.appendChild(list);
+  } else {
+    wrap.appendChild(el('div', { style: 'font-size:.9rem;color:var(--muted);margin-top:6px', text: 'Tidak ada parameter yang menyimpang dari kebiasaan kapal ini. Lanjutkan pemantauan mingguan seperti biasa.' }));
+  }
+
+  wrap.appendChild(el('div', {
+    class: 'overview-note',
+    html: '<b>Catatan cakupan:</b> ringkasan ini memakai 7 metrik operasional mingguan yang tersedia (Fuel Pump Index, VIT Index, P Comp, P Max, Exhaust Temp, JCW Temp, Piston Cooling Outlet Temp). Konsumsi minyak silinder — indikator kuat lain untuk keausan ring/liner — <b>belum ada di dataset ini</b>, jadi belum bisa ikut diskrining; layak ditambahkan sebagai kartu berikutnya kalau datanya tersedia. Piston Cooling Outlet Temp ditandai "sinyal lemah" karena terlalu banyak variabel lain yang memengaruhi angka mutlaknya — yang diandalkan di sini cuma trennya.'
+  }));
+}
+
+/* ================= legend bersama ================= */
+function renderSharedLegend() {
+  const wrap = document.getElementById('shared-legend');
+  wrap.innerHTML = '';
+  const units = Object.keys(DATA.vessels[state.vessel].units).map(Number).sort((a, b) => a - b);
+  units.forEach(u => {
+    const chip = el('button', { class: 'legend-chip', 'data-unit-id': String(u), 'data-active': String(state.isolatedUnit === String(u)) });
+    const sw = el('span', { class: 'sw' }); sw.style.background = `var(--series-${unitSlot(u)})`;
+    chip.append(sw, el('span', { text: 'Unit ' + u }));
+    chip.addEventListener('mouseenter', () => { state.hoveredUnit = String(u); refreshEmphasis(); });
+    chip.addEventListener('mouseleave', () => { state.hoveredUnit = null; refreshEmphasis(); });
+    chip.addEventListener('click', () => { state.isolatedUnit = state.isolatedUnit === String(u) ? null : String(u); renderSharedLegend(); refreshEmphasis(); });
+    wrap.appendChild(chip);
+  });
+  wrap.appendChild(el('span', { class: 'legend-hint', text: 'hover = sorot sementara · klik = kunci sorotan pada semua kartu' }));
+}
+
+/* ================= header / tabs ================= */
+function renderVesselTabs() {
+  const wrap = document.getElementById('vessel-tabs');
+  wrap.innerHTML = '';
+  VESSEL_ORDER.forEach(v => {
+    const btn = el('button', { class: 'tab-btn', role: 'tab', 'aria-selected': v === state.vessel ? 'true' : 'false', text: v });
+    btn.addEventListener('click', () => { state.vessel = v; state.isolatedUnit = null; state.hoveredUnit = null; renderAll(); });
+    wrap.appendChild(btn);
+  });
+}
+function renderHeader() {
+  const v = DATA.vessels[state.vessel];
+  document.getElementById('vessel-name').textContent = v.vessel_name;
+  document.getElementById('vessel-sub').textContent = v.n_reports + ' laporan · ' + fmtDateFull(v.date_min) + ' – ' + fmtDateFull(v.date_max);
+}
+
+/* ================= render utama ================= */
+function renderAll() {
+  renderVesselTabs();
+  renderHeader();
+  renderSharedLegend();
+  const vessel = DATA.vessels[state.vessel];
+  const evals = evaluateAll(vessel);
+  renderOverview(evals);
+  const grid = document.getElementById('card-grid');
+  grid.innerHTML = '';
+  PARAMS.forEach(p => {
+    const card = renderCard(p, evals[p.key]);
+    card.id = 'card-' + p.key;
+    grid.appendChild(card);
+  });
+  refreshEmphasis();
+}
+
+document.querySelectorAll('.scale-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.documentElement.style.setProperty('--fs', btn.getAttribute('data-scale') + 'px');
+    document.querySelectorAll('.scale-btn').forEach(b => b.setAttribute('aria-pressed', String(b === btn)));
+  });
+});
+
+fetch('./data.json').then(r => r.json()).then(json => {
+  DATA = json;
+  renderAll();
+}).catch(err => {
+  document.body.innerHTML = '<p style="font-family:system-ui;padding:40px;color:#8E2A1E">Gagal memuat data.json: ' + err.message + '</p>';
+});
+</script>
+</body>
+</html>
