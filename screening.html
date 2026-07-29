@@ -74,7 +74,12 @@ header.top { display: flex; flex-wrap: wrap; align-items: flex-end; justify-cont
 .legend-chip .sw { width: 10px; height: 10px; border-radius: 3px; flex: none; }
 .legend-chip[data-active="true"] { outline: 1.5px solid var(--ink); }
 .legend-hint { font-size: .78rem; color: var(--muted); }
-.legend-hint-static { font-size: .82rem; color: var(--muted); margin: -6px 0 16px; }
+.global-legend-block { background: var(--panel); border: 1px solid var(--hair); border-radius: 12px;
+  padding: 12px 16px 10px; margin-bottom: 18px; }
+.global-legend-label { font-size: .78rem; letter-spacing: 1.2px; font-weight: 800; color: var(--ink);
+  text-transform: uppercase; margin-bottom: 8px; }
+.global-legend-block .legend-row { margin-bottom: 4px; }
+.legend-hint-static { font-size: .8rem; color: var(--muted); margin: 6px 0 0; }
 .pcard .legend-row { margin: 2px 0 8px; padding: 0 16px; }
 
 /* ---------- grid kartu ---------- */
@@ -187,7 +192,11 @@ footer.page-footer { max-width: 1240px; margin: 34px auto 0; padding: 0 20px; fo
 
   <section class="overview" id="overview"></section>
 
-  <p class="legend-hint-static">Arahkan kursor ke label <b>Unit</b> di atas tiap grafik untuk menyorot silinder itu di semua kartu; klik untuk mengunci sorotan.</p>
+  <div class="global-legend-block">
+    <div class="global-legend-label">Sorot pada SEMUA grafik sekaligus</div>
+    <div class="legend-row" id="global-legend"></div>
+    <p class="legend-hint-static">Legend di atas tiap grafik di bawah ini hanya menyorot grafik itu sendiri — pakai legend ini kalau mau menyorot Unit yang sama di seluruh kartu.</p>
+  </div>
 
   <div class="card-grid" id="card-grid"></div>
 
@@ -219,7 +228,7 @@ footer.page-footer { max-width: 1240px; margin: 34px auto 0; padding: 0 20px; fo
 const MONTHS = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
 const VESSEL_ORDER = ['MAA','ODI','OGO'];
 let DATA = null;
-let state = { vessel: 'MAA', hoveredUnit: null, isolatedUnit: null };
+let state = { vessel: 'MAA', globalHoveredUnit: null, globalIsolatedUnit: null };
 
 /* ================= util dasar ================= */
 function el(tag, attrs, children) {
@@ -501,17 +510,25 @@ function evaluateAll(vessel) {
   return out;
 }
 
-/* ================= emphasis unit (legend <-> semua chart) ================= */
-function activeUnit() { return state.hoveredUnit ?? state.isolatedUnit; }
-function refreshEmphasis() {
-  const active = activeUnit();
-  document.querySelectorAll('[data-unit-id]').forEach(node => {
+/* ================= emphasis unit: LOKAL per-kartu + GLOBAL (semua kartu) ================= */
+// Dua level kontrol (sesuai permintaan): legend DI DALAM tiap kartu cuma menyorot chart
+// kartu itu sendiri (lokal); legend di PUNCAK halaman menyorot SEMUA kartu sekaligus
+// (global). Kalau kartu punya sorotan lokal aktif, itu diprioritaskan drpd global utk
+// kartu tsb -- lihat urutan precedence di activeUnitForCard().
+let cardRegistry = []; // { svg, local: { hoveredUnit, isolatedUnit } }
+function activeUnitForCard(entry) {
+  return entry.local.hoveredUnit ?? entry.local.isolatedUnit ?? state.globalHoveredUnit ?? state.globalIsolatedUnit ?? null;
+}
+function refreshCardEmphasis(entry) {
+  const active = activeUnitForCard(entry);
+  entry.svg.querySelectorAll('[data-unit-id]').forEach(node => {
     const u = node.getAttribute('data-unit-id');
     node.classList.remove('dim', 'emph');
     if (active === null) return;
     node.classList.add(u === active ? 'emph' : 'dim');
   });
 }
+function refreshAllCardsEmphasis() { cardRegistry.forEach(refreshCardEmphasis); }
 
 /* ================= tooltip ================= */
 const ttEl = document.getElementById('tooltip');
@@ -647,7 +664,6 @@ function openModal(metricDef) {
   modalChartWrap.innerHTML = '';
   modalChartWrap.appendChild(buildChart(metricDef, { width: 1000, height: 440 }));
   modalEl.hidden = false;
-  refreshEmphasis();
 }
 function closeModal() { modalEl.hidden = true; modalChartWrap.innerHTML = ''; }
 document.getElementById('modal-close').addEventListener('click', closeModal);
@@ -680,10 +696,14 @@ function renderCard(metricDef, v) {
   card.appendChild(el('div', { class: 'pcard-sub', text: 'Semua silinder ditampilkan' }));
 
   const vesselUnits = Object.keys(DATA.vessels[state.vessel].units).map(Number).sort((a, b) => a - b);
-  card.appendChild(buildLegendRow(vesselUnits));
+
+  const chartSvg = buildChart(metricDef, { width: 620, height: 210 });
+  const cardEntry = { svg: chartSvg, local: { hoveredUnit: null, isolatedUnit: null } };
+  cardRegistry.push(cardEntry);
+  card.appendChild(buildLegendRow(vesselUnits, 'local', cardEntry));
 
   const chartWrap = el('div', { class: 'pcard-chart' });
-  chartWrap.appendChild(buildChart(metricDef, { width: 620, height: 210 }));
+  chartWrap.appendChild(chartSvg);
   card.appendChild(chartWrap);
 
   const findingBlock = el('div', { class: 'info-block' }, [
@@ -777,31 +797,35 @@ function renderOverview(evals) {
   }));
 }
 
-/* ================= legend per-kartu (satu per grafik, semua saling sinkron) ================= */
-// Setiap kartu punya baris legend sendiri di atas grafiknya (permintaan: mudah dilihat tanpa
-// scroll ke atas). Semua instance tetap mengontrol satu state global yang sama (hover/isolate),
-// jadi menyorot Unit di kartu manapun ikut menyorot di kartu lain juga.
-let legendChipRegistry = [];
-function buildLegendRow(units) {
+/* ================= legend: mode 'local' (1 kartu saja) atau 'global' (semua kartu) ================= */
+// mode 'local'  -> dipasang di dalam SATU kartu, cuma menyorot chart kartu itu (cardEntry.local).
+// mode 'global' -> dipasang sekali di puncak halaman, menyorot SEMUA kartu (state.global*).
+function buildLegendRow(units, mode, cardEntry) {
   const wrap = el('div', { class: 'legend-row' });
+  const chips = [];
+  const isolatedNow = () => (mode === 'local' ? cardEntry.local.isolatedUnit : state.globalIsolatedUnit);
   units.forEach(u => {
-    const chip = el('button', { class: 'legend-chip', 'data-unit-id': String(u), 'data-active': String(state.isolatedUnit === String(u)) });
+    const chip = el('button', { class: 'legend-chip', 'data-unit-id': String(u), 'data-active': String(isolatedNow() === String(u)) });
     const sw = el('span', { class: 'sw' }); sw.style.background = `var(--series-${unitSlot(u)})`;
     chip.append(sw, el('span', { text: 'Unit ' + u }));
-    chip.addEventListener('mouseenter', () => { state.hoveredUnit = String(u); refreshEmphasis(); });
-    chip.addEventListener('mouseleave', () => { state.hoveredUnit = null; refreshEmphasis(); });
+    chip.addEventListener('mouseenter', () => {
+      if (mode === 'local') { cardEntry.local.hoveredUnit = String(u); refreshCardEmphasis(cardEntry); }
+      else { state.globalHoveredUnit = String(u); refreshAllCardsEmphasis(); }
+    });
+    chip.addEventListener('mouseleave', () => {
+      if (mode === 'local') { cardEntry.local.hoveredUnit = null; refreshCardEmphasis(cardEntry); }
+      else { state.globalHoveredUnit = null; refreshAllCardsEmphasis(); }
+    });
     chip.addEventListener('click', () => {
-      state.isolatedUnit = state.isolatedUnit === String(u) ? null : String(u);
-      refreshAllLegendChips();
-      refreshEmphasis();
+      if (mode === 'local') cardEntry.local.isolatedUnit = cardEntry.local.isolatedUnit === String(u) ? null : String(u);
+      else state.globalIsolatedUnit = state.globalIsolatedUnit === String(u) ? null : String(u);
+      chips.forEach(c => c.setAttribute('data-active', String(isolatedNow() === c.getAttribute('data-unit-id'))));
+      if (mode === 'local') refreshCardEmphasis(cardEntry); else refreshAllCardsEmphasis();
     });
     wrap.appendChild(chip);
-    legendChipRegistry.push({ unit: String(u), chip });
+    chips.push(chip);
   });
   return wrap;
-}
-function refreshAllLegendChips() {
-  legendChipRegistry.forEach(({ unit, chip }) => chip.setAttribute('data-active', String(state.isolatedUnit === unit)));
 }
 
 /* ================= header / tabs ================= */
@@ -810,7 +834,7 @@ function renderVesselTabs() {
   wrap.innerHTML = '';
   VESSEL_ORDER.forEach(v => {
     const btn = el('button', { class: 'tab-btn', role: 'tab', 'aria-selected': v === state.vessel ? 'true' : 'false', text: v });
-    btn.addEventListener('click', () => { state.vessel = v; state.isolatedUnit = null; state.hoveredUnit = null; renderAll(); });
+    btn.addEventListener('click', () => { state.vessel = v; state.globalIsolatedUnit = null; state.globalHoveredUnit = null; renderAll(); });
     wrap.appendChild(btn);
   });
 }
@@ -824,8 +848,13 @@ function renderHeader() {
 function renderAll() {
   renderVesselTabs();
   renderHeader();
-  legendChipRegistry = [];
+  cardRegistry = [];
   const vessel = DATA.vessels[state.vessel];
+  const vesselUnits = Object.keys(vessel.units).map(Number).sort((a, b) => a - b);
+  const globalLegendWrap = document.getElementById('global-legend');
+  globalLegendWrap.innerHTML = '';
+  globalLegendWrap.appendChild(buildLegendRow(vesselUnits, 'global'));
+
   const evals = evaluateAll(vessel);
   renderOverview(evals);
   const grid = document.getElementById('card-grid');
@@ -835,7 +864,7 @@ function renderAll() {
     card.id = 'card-' + p.key;
     grid.appendChild(card);
   });
-  refreshEmphasis();
+  refreshAllCardsEmphasis();
 }
 
 document.querySelectorAll('.scale-btn').forEach(btn => {
