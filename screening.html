@@ -74,6 +74,8 @@ header.top { display: flex; flex-wrap: wrap; align-items: flex-end; justify-cont
 .legend-chip .sw { width: 10px; height: 10px; border-radius: 3px; flex: none; }
 .legend-chip[data-active="true"] { outline: 1.5px solid var(--ink); }
 .legend-hint { font-size: .78rem; color: var(--muted); }
+.legend-hint-static { font-size: .82rem; color: var(--muted); margin: -6px 0 16px; }
+.pcard .legend-row { margin: 2px 0 8px; padding: 0 16px; }
 
 /* ---------- grid kartu ---------- */
 .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(480px, 1fr)); gap: 16px; }
@@ -185,7 +187,7 @@ footer.page-footer { max-width: 1240px; margin: 34px auto 0; padding: 0 20px; fo
 
   <section class="overview" id="overview"></section>
 
-  <div class="legend-row" id="shared-legend"></div>
+  <p class="legend-hint-static">Arahkan kursor ke label <b>Unit</b> di atas tiap grafik untuk menyorot silinder itu di semua kartu; klik untuk mengunci sorotan.</p>
 
   <div class="card-grid" id="card-grid"></div>
 
@@ -677,6 +679,9 @@ function renderCard(metricDef, v) {
   card.appendChild(head);
   card.appendChild(el('div', { class: 'pcard-sub', text: 'Semua silinder ditampilkan' }));
 
+  const vesselUnits = Object.keys(DATA.vessels[state.vessel].units).map(Number).sort((a, b) => a - b);
+  card.appendChild(buildLegendRow(vesselUnits));
+
   const chartWrap = el('div', { class: 'pcard-chart' });
   chartWrap.appendChild(buildChart(metricDef, { width: 620, height: 210 }));
   card.appendChild(chartWrap);
@@ -772,21 +777,31 @@ function renderOverview(evals) {
   }));
 }
 
-/* ================= legend bersama ================= */
-function renderSharedLegend() {
-  const wrap = document.getElementById('shared-legend');
-  wrap.innerHTML = '';
-  const units = Object.keys(DATA.vessels[state.vessel].units).map(Number).sort((a, b) => a - b);
+/* ================= legend per-kartu (satu per grafik, semua saling sinkron) ================= */
+// Setiap kartu punya baris legend sendiri di atas grafiknya (permintaan: mudah dilihat tanpa
+// scroll ke atas). Semua instance tetap mengontrol satu state global yang sama (hover/isolate),
+// jadi menyorot Unit di kartu manapun ikut menyorot di kartu lain juga.
+let legendChipRegistry = [];
+function buildLegendRow(units) {
+  const wrap = el('div', { class: 'legend-row' });
   units.forEach(u => {
     const chip = el('button', { class: 'legend-chip', 'data-unit-id': String(u), 'data-active': String(state.isolatedUnit === String(u)) });
     const sw = el('span', { class: 'sw' }); sw.style.background = `var(--series-${unitSlot(u)})`;
     chip.append(sw, el('span', { text: 'Unit ' + u }));
     chip.addEventListener('mouseenter', () => { state.hoveredUnit = String(u); refreshEmphasis(); });
     chip.addEventListener('mouseleave', () => { state.hoveredUnit = null; refreshEmphasis(); });
-    chip.addEventListener('click', () => { state.isolatedUnit = state.isolatedUnit === String(u) ? null : String(u); renderSharedLegend(); refreshEmphasis(); });
+    chip.addEventListener('click', () => {
+      state.isolatedUnit = state.isolatedUnit === String(u) ? null : String(u);
+      refreshAllLegendChips();
+      refreshEmphasis();
+    });
     wrap.appendChild(chip);
+    legendChipRegistry.push({ unit: String(u), chip });
   });
-  wrap.appendChild(el('span', { class: 'legend-hint', text: 'hover = sorot sementara · klik = kunci sorotan pada semua kartu' }));
+  return wrap;
+}
+function refreshAllLegendChips() {
+  legendChipRegistry.forEach(({ unit, chip }) => chip.setAttribute('data-active', String(state.isolatedUnit === unit)));
 }
 
 /* ================= header / tabs ================= */
@@ -809,7 +824,7 @@ function renderHeader() {
 function renderAll() {
   renderVesselTabs();
   renderHeader();
-  renderSharedLegend();
+  legendChipRegistry = [];
   const vessel = DATA.vessels[state.vessel];
   const evals = evaluateAll(vessel);
   renderOverview(evals);
