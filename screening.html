@@ -56,7 +56,7 @@ header.top { display: flex; flex-wrap: wrap; align-items: flex-end; justify-cont
 /* ---------- overview ---------- */
 .overview { background: var(--panel); border: 1px solid var(--hair); border-radius: 12px;
   padding: 18px 20px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(15,42,63,.08); }
-.overview-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.overview-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
 .status-pill { display: inline-flex; align-items: center; gap: 7px; font-weight: 800; border-radius: 8px;
   padding: 6px 13px; font-size: .85rem; letter-spacing: .5px; border: 1.5px solid; }
 .status-pill.big { padding: 8px 15px; font-size: 1rem; }
@@ -794,15 +794,16 @@ function renderOverview(evals, vessel) {
   const head = el('div', { class: 'overview-head' }, [
     el('span', { style: 'font-size:.8rem;letter-spacing:2px;font-weight:700;color:var(--muted);text-transform:uppercase', text: 'Kondisi Keseluruhan' }),
   ]);
+  
   const pill = el('span', { class: 'status-pill big' }, [document.createTextNode(st.icon + ' ' + st.label)]);
   pill.style.background = st.bg; pill.style.color = st.fg; pill.style.borderColor = st.bar;
   head.appendChild(pill);
   wrap.appendChild(head);
 
-  wrap.appendChild(el('div', {
-    class: 'overview-report-date',
-    text: 'Berdasarkan laporan TERAKHIR tiap silinder — data ' + vessel.vessel_name + ' s/d ' + fmtDateFull(vessel.date_max) + '. Grafik tetap bisa dijelajah ke tanggal manapun (hover), tapi kesimpulan di bawah selalu memakai titik data terbaru, bukan titik yang sedang di-hover.',
-  }));
+  // wrap.appendChild(el('div', {
+  //   class: 'overview-report-date',
+  //   text: 'Berdasarkan laporan TERAKHIR tiap silinder — data ' + vessel.vessel_name + ' s/d ' + fmtDateFull(vessel.date_max) + '. Grafik tetap bisa dijelajah ke tanggal manapun (hover), tapi kesimpulan di bawah selalu memakai titik data terbaru, bukan titik yang sedang di-hover.',
+  // }));
 
   // ---- Ringkasan visual SEMUA 7 parameter sekaligus (bukan cuma yg disorot) ----
   const scorecard = el('div', { class: 'overview-scorecard' });
@@ -847,10 +848,10 @@ function renderOverview(evals, vessel) {
     wrap.appendChild(el('div', { style: 'font-size:.9rem;color:var(--muted);margin-top:6px', text: 'Tidak ada parameter yang menyimpang dari kebiasaan kapal ini. Lanjutkan pemantauan mingguan seperti biasa.' }));
   }
 
-  wrap.appendChild(el('div', {
-    class: 'overview-note',
-    html: '<b>Catatan cakupan:</b> ringkasan ini memakai 7 metrik operasional mingguan yang tersedia (Fuel Pump Index, VIT Index, P Comp, P Max, Exhaust Temp, JCW Temp, Piston Cooling Outlet Temp). Konsumsi minyak silinder — indikator kuat lain untuk keausan ring/liner — <b>belum ada di dataset ini</b>, jadi belum bisa ikut diskrining; layak ditambahkan sebagai kartu berikutnya kalau datanya tersedia. Piston Cooling Outlet Temp ditandai "sinyal lemah" karena terlalu banyak variabel lain yang memengaruhi angka mutlaknya — yang diandalkan di sini cuma trennya.'
-  }));
+  // wrap.appendChild(el('div', {
+  //   class: 'overview-note',
+  //   html: '<b>Catatan cakupan:</b> ringkasan ini memakai 7 metrik operasional mingguan yang tersedia (Fuel Pump Index, VIT Index, P Comp, P Max, Exhaust Temp, JCW Temp, Piston Cooling Outlet Temp). Konsumsi minyak silinder — indikator kuat lain untuk keausan ring/liner — <b>belum ada di dataset ini</b>, jadi belum bisa ikut diskrining; layak ditambahkan sebagai kartu berikutnya kalau datanya tersedia. Piston Cooling Outlet Temp ditandai "sinyal lemah" karena terlalu banyak variabel lain yang memengaruhi angka mutlaknya — yang diandalkan di sini cuma trennya.'
+  // }));
 }
 
 /* ================= legend: mode 'local' (1 kartu saja) atau 'global' (semua kartu) ================= */
