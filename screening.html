@@ -653,24 +653,98 @@ function buildChart(metricDef, opts) {
   return svg;
 }
 
-/* ================= modal pop-up ================= */
+/* ================= isi kartu (dipakai bersama oleh kartu grid & modal pop-up) ================= */
+// Satu fungsi ini membangun legend-lokal + chart + panel Temuan/Tindakan + statistik --
+// dipakai persis sama oleh kartu di grid MAUPUN oleh modal, supaya SEMUA interaksi (legend,
+// hover crosshair chart) ikut terbawa ke pop-up, bukan cuma grafiknya doang.
+function buildCardBody(metricDef, v, opts) {
+  opts = opts || {};
+  const chartWidth = opts.chartWidth || 620, chartHeight = opts.chartHeight || 210;
+  const wrap = el('div', { class: 'pcard-body' });
+
+  wrap.appendChild(el('div', { class: 'pcard-sub', text: 'Semua silinder ditampilkan' }));
+
+  const vesselUnits = Object.keys(DATA.vessels[state.vessel].units).map(Number).sort((a, b) => a - b);
+  const chartSvg = buildChart(metricDef, { width: chartWidth, height: chartHeight });
+  const cardEntry = { svg: chartSvg, local: { hoveredUnit: null, isolatedUnit: null } };
+  cardRegistry.push(cardEntry);
+  wrap.appendChild(buildLegendRow(vesselUnits, 'local', cardEntry));
+
+  const chartWrap = el('div', { class: 'pcard-chart' });
+  chartWrap.appendChild(chartSvg);
+  wrap.appendChild(chartWrap);
+
+  const findingBlock = el('div', { class: 'info-block' }, [
+    el('div', { class: 'info-label', text: 'Temuan' }),
+    el('div', { class: 'info-headline', text: v.headline }),
+    v.body ? el('div', { class: 'info-body', text: v.body }) : null,
+  ]);
+  const info = el('div', { class: 'pcard-info' });
+  info.appendChild(findingBlock);
+  if (v.action) {
+    info.appendChild(el('div', { class: 'info-block action-block' + (v.status === 'warning' ? ' crit' : '') }, [
+      el('div', { class: 'info-label', text: 'Tindakan' }),
+      el('div', { class: 'info-headline', text: v.action }),
+    ]));
+  } else {
+    info.appendChild(el('div', { class: 'info-block' }, [
+      el('div', { class: 'action-none', html: '&#10003; Tidak ada tindakan korektif.' }),
+    ]));
+  }
+  wrap.appendChild(info);
+
+  const vessel = DATA.vessels[state.vessel];
+  const latest = latestByUnit(vessel, metricDef.key);
+  const entries = Object.entries(latest);
+  if (entries.length) {
+    const vals = entries.map(e => e[1]);
+    const mean = vals.reduce((a, b) => a + b, 0) / vals.length;
+    const spread = Math.max(...vals) - Math.min(...vals);
+    const hi = entries.reduce((a, b) => (b[1] > a[1] ? b : a));
+    const lo = entries.reduce((a, b) => (b[1] < a[1] ? b : a));
+    wrap.appendChild(el('div', { class: 'pcard-stats' }, [
+      el('div', { class: 'stat-cell' }, [el('b', { text: 'Rata-rata' }), el('span', { class: 'v', text: fmt1(mean) })]),
+      el('div', { class: 'stat-cell' }, [el('b', { text: 'Sebaran' }), el('span', { class: 'v', text: fmt1(spread) })]),
+      el('div', { class: 'stat-cell' }, [el('b', { text: 'Tertinggi' }), el('span', { class: 'v', text: 'U' + hi[0] + ' · ' + fmt1(hi[1]) })]),
+      el('div', { class: 'stat-cell' }, [el('b', { text: 'Terendah' }), el('span', { class: 'v', text: 'U' + lo[0] + ' · ' + fmt1(lo[1]) })]),
+    ]));
+  }
+  return { el: wrap, cardEntry };
+}
+
+/* ================= modal pop-up: SATU KARTU UTUH diperbesar, bukan cuma grafiknya ================= */
 const modalEl = document.getElementById('modal');
 const modalTitle = document.getElementById('modal-title');
 const modalSub = document.getElementById('modal-sub');
 const modalChartWrap = document.getElementById('modal-chart-wrap');
+let modalCardEntry = null;
 function openModal(metricDef) {
-  modalTitle.textContent = metricDef.label + ' — ' + DATA.vessels[state.vessel].vessel_name;
-  modalSub.textContent = (metricDef.unit || 'tanpa satuan') + ' · seluruh silinder · sumbu waktu';
+  const vessel = DATA.vessels[state.vessel];
+  const v = evaluateAll(vessel)[metricDef.key];
+  const st = STATUS_STYLE[v.status];
+
+  modalTitle.textContent = metricDef.label + ' — ' + vessel.vessel_name;
+  modalSub.innerHTML = '';
+  const modalPill = el('span', { class: 'status-pill' }, [document.createTextNode(st.icon + ' ' + st.label)]);
+  modalPill.style.background = st.bg; modalPill.style.color = st.fg; modalPill.style.borderColor = st.bar;
+  modalSub.append(document.createTextNode((metricDef.unit || 'tanpa satuan') + ' · seluruh silinder  '), modalPill);
+
   modalChartWrap.innerHTML = '';
-  modalChartWrap.appendChild(buildChart(metricDef, { width: 1000, height: 440 }));
+  const body = buildCardBody(metricDef, v, { chartWidth: 940, chartHeight: 380 });
+  modalCardEntry = body.cardEntry;
+  modalChartWrap.appendChild(body.el);
   modalEl.hidden = false;
 }
-function closeModal() { modalEl.hidden = true; modalChartWrap.innerHTML = ''; }
+function closeModal() {
+  modalEl.hidden = true;
+  modalChartWrap.innerHTML = '';
+  if (modalCardEntry) { cardRegistry = cardRegistry.filter(e => e !== modalCardEntry); modalCardEntry = null; }
+}
 document.getElementById('modal-close').addEventListener('click', closeModal);
 modalEl.addEventListener('click', evt => { if (evt.target === modalEl) closeModal(); });
 document.addEventListener('keydown', evt => { if (evt.key === 'Escape' && !modalEl.hidden) closeModal(); });
 
-/* ================= kartu parameter ================= */
+/* ================= kartu parameter (grid) ================= */
 function renderCard(metricDef, v) {
   const st = STATUS_STYLE[v.status];
   const card = el('div', { class: 'pcard' });
@@ -685,7 +759,7 @@ function renderCard(metricDef, v) {
   const pill = el('span', { class: 'status-pill' }, [document.createTextNode(st.icon + ' ' + st.label)]);
   pill.style.background = st.bg; pill.style.color = st.fg; pill.style.borderColor = st.bar;
 
-  const expandBtn = el('button', { class: 'expand-btn', title: 'Perbesar grafik', 'aria-label': 'Perbesar grafik', html: '&#10529;' });
+  const expandBtn = el('button', { class: 'expand-btn', title: 'Perbesar kartu ini', 'aria-label': 'Perbesar kartu ini', html: '&#10529;' });
   expandBtn.addEventListener('click', () => openModal(metricDef));
 
   const head = el('div', { class: 'pcard-head' }, [
@@ -693,56 +767,9 @@ function renderCard(metricDef, v) {
     el('div', { class: 'pcard-actions' }, [pill, expandBtn]),
   ]);
   card.appendChild(head);
-  card.appendChild(el('div', { class: 'pcard-sub', text: 'Semua silinder ditampilkan' }));
 
-  const vesselUnits = Object.keys(DATA.vessels[state.vessel].units).map(Number).sort((a, b) => a - b);
-
-  const chartSvg = buildChart(metricDef, { width: 620, height: 210 });
-  const cardEntry = { svg: chartSvg, local: { hoveredUnit: null, isolatedUnit: null } };
-  cardRegistry.push(cardEntry);
-  card.appendChild(buildLegendRow(vesselUnits, 'local', cardEntry));
-
-  const chartWrap = el('div', { class: 'pcard-chart' });
-  chartWrap.appendChild(chartSvg);
-  card.appendChild(chartWrap);
-
-  const findingBlock = el('div', { class: 'info-block' }, [
-    el('div', { class: 'info-label', text: 'Temuan' }),
-    el('div', { class: 'info-headline', text: v.headline }),
-    v.body ? el('div', { class: 'info-body', text: v.body }) : null,
-  ]);
-
-  const info = el('div', { class: 'pcard-info' });
-  info.appendChild(findingBlock);
-  if (v.action) {
-    info.appendChild(el('div', { class: 'info-block action-block' + (v.status === 'warning' ? ' crit' : '') }, [
-      el('div', { class: 'info-label', text: 'Tindakan' }),
-      el('div', { class: 'info-headline', text: v.action }),
-    ]));
-  } else {
-    info.appendChild(el('div', { class: 'info-block' }, [
-      el('div', { class: 'action-none', html: '&#10003; Tidak ada tindakan korektif.' }),
-    ]));
-  }
-  card.appendChild(info);
-
-  const vessel = DATA.vessels[state.vessel];
-  const latest = latestByUnit(vessel, metricDef.key);
-  const entries = Object.entries(latest);
-  if (entries.length) {
-    const vals = entries.map(e => e[1]);
-    const mean = vals.reduce((a, b) => a + b, 0) / vals.length;
-    const spread = Math.max(...vals) - Math.min(...vals);
-    const hi = entries.reduce((a, b) => (b[1] > a[1] ? b : a));
-    const lo = entries.reduce((a, b) => (b[1] < a[1] ? b : a));
-    const stats = el('div', { class: 'pcard-stats' }, [
-      el('div', { class: 'stat-cell' }, [el('b', { text: 'Rata-rata' }), el('span', { class: 'v', text: fmt1(mean) })]),
-      el('div', { class: 'stat-cell' }, [el('b', { text: 'Sebaran' }), el('span', { class: 'v', text: fmt1(spread) })]),
-      el('div', { class: 'stat-cell' }, [el('b', { text: 'Tertinggi' }), el('span', { class: 'v', text: 'U' + hi[0] + ' · ' + fmt1(hi[1]) })]),
-      el('div', { class: 'stat-cell' }, [el('b', { text: 'Terendah' }), el('span', { class: 'v', text: 'U' + lo[0] + ' · ' + fmt1(lo[1]) })]),
-    ]);
-    card.appendChild(stats);
-  }
+  const body = buildCardBody(metricDef, v, { chartWidth: 620, chartHeight: 210 });
+  card.appendChild(body.el);
   return card;
 }
 
