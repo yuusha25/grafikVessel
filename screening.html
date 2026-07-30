@@ -73,6 +73,31 @@ header.top { display: flex; flex-wrap: wrap; align-items: flex-end; justify-cont
 .overview-list .icon { font-weight: 800; min-width: 20px; text-align: center; }
 .overview-note { font-size: .85rem; color: var(--muted); margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--hair); line-height: 1.55; }
 
+/* ---------- diagnosis pola lintas-parameter ---------- */
+.pattern-section { background: var(--panel); border: 1px solid var(--hair); border-radius: 12px;
+  padding: 18px 20px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(15,42,63,.08); }
+.pattern-title { font-size: 1.05rem; font-weight: 800; margin: 0 0 3px; }
+.pattern-desc { font-size: .82rem; color: var(--muted); margin: 0 0 14px; line-height: 1.5; max-width: 760px; }
+.pattern-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
+.pattern-item { border-radius: 10px; padding: 12px 14px; background: var(--info-bg); border-left: 4px solid var(--info-bar); }
+.pattern-item.ambiguous { background: var(--warn-bg); border-left-color: var(--warn-bar); }
+.pattern-item.weak { background: #F2F2F0; border-left-color: var(--hair); }
+.pattern-item-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.pattern-unit { font-weight: 800; font-size: .85rem; }
+.pattern-cause { font-weight: 800; font-size: .9rem; color: var(--info-fg); }
+.pattern-item.ambiguous .pattern-cause { color: var(--warn-fg); }
+.pattern-item.weak .pattern-cause { color: var(--muted); }
+.pattern-confidence { font-size: .65rem; font-weight: 800; letter-spacing: .5px; text-transform: uppercase;
+  padding: 2px 7px; border-radius: 999px; background: rgba(255,255,255,.6); color: var(--info-fg); }
+.pattern-reason { font-size: .82rem; color: var(--ink); margin-top: 5px; line-height: 1.5; }
+.pattern-action { font-size: .82rem; color: var(--ink); margin-top: 7px; line-height: 1.5; padding-top: 7px; border-top: 1px dashed rgba(15,42,63,.15); }
+.pattern-action b { color: var(--crit-fg); }
+.pattern-item.ambiguous .pattern-action b { color: var(--warn-fg); }
+.pattern-note { font-size: .76rem; color: var(--muted); margin-top: 4px; line-height: 1.5; font-style: italic; }
+.pattern-global-item { border-left-color: var(--ink); }
+.pattern-global-item .pattern-cause { color: var(--ink); }
+.pattern-empty { font-size: .85rem; color: var(--muted); padding: 4px 0; }
+
 /* ---------- legend bersama ---------- */
 .legend-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 0 18px; }
 .legend-chip { display: inline-flex; align-items: center; gap: 6px; font-size: .8rem; color: var(--muted);
@@ -106,6 +131,28 @@ header.top { display: flex; flex-wrap: wrap; align-items: flex-end; justify-cont
 .pcard-sub { font-size: .78rem; color: var(--muted); padding: 3px 16px 0; }
 .pcard-chart { padding: 6px 8px 4px 12px; }
 svg.chart-svg { display: block; width: 100%; height: auto; cursor: crosshair; }
+
+.pcard-subrow { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 3px 16px 0; }
+.pcard-subrow .pcard-sub { padding: 0; }
+.table-toggle { cursor: pointer; border: 1px solid var(--hair); background: #fff; color: var(--muted);
+  border-radius: 6px; padding: 4px 10px; font-size: .74rem; font-weight: 700; white-space: nowrap; flex: none; }
+.table-toggle:hover { color: var(--ink); border-color: var(--ink); }
+.chart-svg-wrap.hidden-view { display: none; }
+.data-table-wrap { display: none; overflow: auto; max-height: 300px; margin: 4px 16px 8px; border: 1px solid var(--hair); border-radius: 8px; }
+.data-table-wrap.shown { display: block; }
+/* border-collapse:collapse rusak dgn position:sticky (border jadi milik tabel,
+   bukan sel -- bikin header/kolom sticky "tabrakan" visual dgn baris yg lewat
+   di bawahnya waktu discroll). Pakai border-separate + border-spacing:0, garis
+   dibuat lewat border-bottom per sel spt sebelumnya. z-index berjenjang supaya
+   sel pojok (sticky di DUA arah sekaligus) selalu menang dari header biasa,
+   dan header biasa menang dari kolom-tanggal, dan kolom-tanggal menang dari sel biasa. */
+table.data-table { border-collapse: separate; border-spacing: 0; width: 100%; font-size: .78rem; font-variant-numeric: tabular-nums; }
+table.data-table th, table.data-table td { padding: 5px 10px; text-align: right; border-bottom: 1px solid var(--hair); white-space: nowrap; background: var(--panel); }
+table.data-table th:first-child, table.data-table td:first-child { text-align: left; position: sticky; left: 0; z-index: 2; }
+table.data-table thead th { background: var(--panel2); color: var(--muted); font-weight: 700; font-size: .68rem;
+  text-transform: uppercase; letter-spacing: .03em; position: sticky; top: 0; z-index: 3; }
+table.data-table thead th:first-child { z-index: 4; }
+table.data-table tbody tr:last-child td { border-bottom: none; }
 .axis-tick { font-size: 9.5px; fill: var(--muted); }
 .gridline { stroke: #E7ECEF; stroke-width: 1; }
 .baseline { stroke: var(--hair); stroke-width: 1; }
@@ -199,6 +246,8 @@ footer.page-footer { max-width: 1240px; margin: 34px auto 0; padding: 0 20px; fo
 
   <section class="overview" id="overview"></section>
 
+  <section class="pattern-section" id="pattern-section"></section>
+
   <div class="global-legend-block">
     <div class="global-legend-label">Sorot pada SEMUA grafik sekaligus</div>
     <div class="legend-row" id="global-legend"></div>
@@ -235,6 +284,7 @@ footer.page-footer { max-width: 1240px; margin: 34px auto 0; padding: 0 20px; fo
 const MONTHS = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
 const VESSEL_ORDER = ['MAA','ODI','OGO'];
 let DATA = null;
+let RING_DATA = null; // pengukuran fisik vertical clearance ring piston -- opsional, boleh gagal tanpa merusak sisa halaman
 let state = { vessel: 'MAA', globalHoveredUnit: null, globalIsolatedUnit: null };
 
 /* ================= util dasar ================= */
@@ -517,6 +567,110 @@ function evaluateAll(vessel) {
   return out;
 }
 
+/* ================= diagnosis pola lintas-parameter ================= */
+/* Tabel pola dari diskusi tim (dipetakan langsung ke data yang tersedia di halaman ini):
+
+     Pola                                                    Penyebab paling mungkin   Pembeda
+     P Comp turun + P Max turun + oil naik (1 silinder)   -> Ring / Liner               P comp yang turun
+     P Comp normal + P Max turun + exhaust naik (1 sil.)  -> Injektor/Timing             P comp tetap normal
+     Exhaust naik + P Max turun, kompresi normal, bunyi   -> Katup buang bocor           pola tekanan + gejala mekanis
+     Semua silinder turun/naik bersama                    -> Scavenge/Air Cooler/T-C     bukan satu silinder
+     Fuel index 1 silinder beda sendiri                    -> Fuel pump/rack             index-nya yang menyimpang
+
+   Dua keterbatasan disengaja diberi tahu ke pengguna, bukan ditutupi:
+     1. Konsumsi minyak silinder (oil naik) ADA di report_summary.csv tapi levelnya per
+        LAPORAN, bukan per-cylinder -- dataset halaman ini (data.json, dari
+        cylinder_timeseries_clean.csv) tidak punya kolom itu per silinder. Pola "Ring/Liner"
+        di sini dihitung dari P Comp+P Max saja; catatan itu ditulis eksplisit di tiap temuan.
+     2. Baris 2 & 3 tabel (Injektor/Timing vs Katup Buang Bocor) punya TANDA TEKANAN YANG
+        SAMA PERSIS dari data operasional -- pembedanya cuma gejala fisik (bunyi), yang
+        tidak ada di data. Kedua pola ini SENGAJA digabung jadi satu temuan "ambigu",
+        bukan ditebak salah satu, supaya tidak menyesatkan. */
+
+// unit yang menyimpang signifikan dari RATA-RATA KAPAL SAAT INI (snapshot, bukan tren) --
+// pakai kelipatan std historis yang sama dengan yg sudah dipakai kartu per-parameter
+// (lihat watchUnits di evalPComp) supaya "pola" ini tidak lebih/kurang sensitif dari kartunya.
+function directionalUnits(vessel, metricKey, stdMultiple) {
+  const hist = historicalStats(vessel, metricKey);
+  const latest = latestByUnit(vessel, metricKey);
+  const vals = Object.values(latest);
+  if (!vals.length || hist.std === 0) return { low: [], high: [], mean: null, latest, hist };
+  const { mean } = basicStats(vals);
+  const low = Object.keys(latest).filter(u => mean - latest[u] > stdMultiple * hist.std);
+  const high = Object.keys(latest).filter(u => latest[u] - mean > stdMultiple * hist.std);
+  return { low, high, mean, latest, hist };
+}
+
+// pola GLOBAL: mayoritas silinder (bukan cuma 1-2) bergerak SEARAH dlm beberapa laporan
+// terakhir -- lihat catatan relativeTrendByUnit di atas: itu dipakai utk MENGECUALIKAN
+// gerakan bersama dari flag per-silinder; fungsi ini kebalikannya, MENANGKAP gerakan
+// bersama itu sbg temuan tersendiri (Scavenge/Air Cooler/Turbocharger).
+function detectGlobalShift(vessel, metricKey, window) {
+  const trends = trendByUnit(vessel, metricKey, window || 6);
+  const hist = historicalStats(vessel, metricKey);
+  const units = Object.keys(trends);
+  if (!units.length || hist.std === 0) return null;
+  const stepThreshold = hist.std * 0.15; // laju per-laporan yg dianggap bergerak berarti
+  const down = units.filter(u => trends[u] < -stepThreshold);
+  const up = units.filter(u => trends[u] > stepThreshold);
+  const majority = Math.ceil(units.length * 0.7);
+  if (down.length >= majority) return { direction: 'turun', units: down, total: units.length };
+  if (up.length >= majority) return { direction: 'naik', units: up, total: units.length };
+  return null;
+}
+
+const PATTERN_METRIC_LABEL = { p_comp_kgcm2: 'P Comp', p_max_kgcm2: 'P Max', exhaust_temp_c: 'Exhaust Temp' };
+
+function evalCrossPatterns(vessel) {
+  const pcomp = directionalUnits(vessel, 'p_comp_kgcm2', 1);
+  const pmax = directionalUnits(vessel, 'p_max_kgcm2', 1);
+  const exh = directionalUnits(vessel, 'exhaust_temp_c', 1);
+  const fpi = directionalUnits(vessel, 'fuel_pump_index', 1.5);
+  const allUnits = Object.keys(vessel.units).sort((a, b) => a - b);
+
+  const findings = [];
+  allUnits.forEach(u => {
+    const compLow = pcomp.low.includes(u);
+    const maxLow = pmax.low.includes(u);
+    const exhHigh = exh.high.includes(u);
+
+    if (maxLow && compLow) {
+      findings.push({ unit: u, cause: 'Ring / Liner', confidence: 'strong',
+        headline: `Unit ${u}: kemungkinan Ring/Liner aus atau rusak.`,
+        reason: `P Comp turun (${pcomp.latest[u].toFixed(1)} kg/cm², rata-rata ${pcomp.mean.toFixed(1)}) bersamaan P Max turun (${pmax.latest[u].toFixed(1)} kg/cm², rata-rata ${pmax.mean.toFixed(1)}).`,
+        action: `Perlu pengecekan fisik segera pada Unit ${u} — buka lubang bilas (scavenge port), periksa gap & kondisi permukaan ring serta liner. Jadwalkan perbaikan/penggantian bila hasil pengecekan mengonfirmasi keausan.`,
+        note: 'Konsumsi minyak silinder (penguat pola ini) belum ada di dataset ini — kolom itu tercatat per laporan, bukan per silinder.' });
+    } else if (maxLow && !compLow && exhHigh) {
+      findings.push({ unit: u, cause: 'Injektor/Timing atau Katup Buang Bocor', confidence: 'ambiguous',
+        headline: `Unit ${u}: kemungkinan masalah Injektor/Timing atau Katup Buang Bocor.`,
+        reason: `P Comp normal tapi P Max turun (${pmax.latest[u].toFixed(1)} kg/cm²) dan Exhaust Temp naik (${exh.latest[u].toFixed(0)}°C, rata-rata ${exh.mean.toFixed(0)}°C).`,
+        action: `Perlu pengecekan fisik pada Unit ${u} untuk memastikan penyebabnya: dengarkan bunyi tidak wajar (indikasi katup buang bocor), lalu periksa injektor & setelan timing bahan bakar. Perbaikan dilakukan sesuai hasil pengecekan.`,
+        note: 'Dua penyebab ini polanya sama persis dari data operasional — pembedanya gejala fisik (bunyi), bukan angka.' });
+    }
+
+    if ((fpi.low.includes(u) || fpi.high.includes(u)) && !maxLow && !compLow) {
+      findings.push({ unit: u, cause: 'Fuel Pump / Rack', confidence: 'strong',
+        headline: `Unit ${u}: kemungkinan Fuel Pump/Rack menyimpang.`,
+        reason: `Fuel Pump Index Unit ${u} menyimpang sendiri (${fpi.latest[u].toFixed(1)}, rata-rata ${fpi.mean.toFixed(1)}) tanpa diikuti P Comp/P Max.`,
+        action: `Cek & setel ulang governor serta fuel rack linkage Unit ${u}; bandingkan pemerataannya dengan silinder lain.`,
+        note: 'Index yang menyimpang sendirian (bukan tekanan) menunjuk ke rack/fuel pump, bukan kondisi piston.' });
+    }
+  });
+
+  const globalFindings = ['p_comp_kgcm2', 'p_max_kgcm2', 'exhaust_temp_c']
+    .map(key => ({ key, g: detectGlobalShift(vessel, key, 6) }))
+    .filter(x => x.g)
+    .map(x => ({
+      cause: 'Scavenge / Air Cooler / Turbocharger', confidence: 'strong', isGlobal: true,
+      headline: 'Kemungkinan masalah pada Scavenge Air / Air Cooler / Turbocharger — bukan piston satu silinder.',
+      reason: `${PATTERN_METRIC_LABEL[x.key]} ${x.g.direction} bersamaan pada ${x.g.units.length} dari ${x.g.total} silinder (${fmtUnitList(x.g.units)}).`,
+      action: 'Cek scavenge air pressure/temperature, kondisi air cooler, dan turbocharger secara keseluruhan — bukan piston/ring per silinder.',
+      note: 'Bergeraknya mayoritas silinder bersamaan menunjuk ke komponen global mesin, bukan satu piston/ring tertentu.',
+    }));
+
+  return { findings, globalFindings };
+}
+
 /* ================= emphasis unit: LOKAL per-kartu + GLOBAL (semua kartu) ================= */
 // Dua level kontrol (sesuai permintaan): legend DI DALAM tiap kartu cuma menyorot chart
 // kartu itu sendiri (lokal); legend di PUNCAK halaman menyorot SEMUA kartu sekaligus
@@ -660,6 +814,55 @@ function buildChart(metricDef, opts) {
   return svg;
 }
 
+/* ================= tabel data mentah -- kembaran tiap chart, dipakai lewat toggle ================= */
+function buildMetricTable(metricDef) {
+  const vessel = DATA.vessels[state.vessel];
+  const units = Object.keys(vessel.units).map(Number).sort((a, b) => a - b);
+  const dates = vessel.units[units[0]].dates;
+  const table = el('table', { class: 'data-table' });
+  table.appendChild(el('thead', {}, [el('tr', {}, [el('th', { text: 'Tanggal' }), ...units.map(u => el('th', { text: 'Unit ' + u }))])]));
+  const tbody = el('tbody');
+  dates.forEach((dstr, i) => {
+    const tr = el('tr');
+    tr.appendChild(el('td', { text: fmtDateFull(dstr) }));
+    units.forEach(u => {
+      const s = vessel.units[u];
+      const val = s[metricDef.key][i];
+      const td = el('td', { text: val === null ? '–' : val.toFixed(metricDef.dec) });
+      if (hasFlag(s.qc_anomali_cols[i], metricDef.key)) { td.style.color = 'var(--crit-fg)'; td.style.fontWeight = '800'; }
+      else if (hasFlag(s.qc_sistematik_cols[i], metricDef.key)) { td.style.color = 'var(--muted)'; td.style.fontStyle = 'italic'; }
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+  return el('div', { class: 'data-table-wrap' }, [table]);
+}
+
+function buildRingTable(ringVessel) {
+  const threshold = RING_DATA.meta.threshold_mm;
+  const cylinders = Object.keys(ringVessel.cylinders).map(Number).sort((a, b) => a - b);
+  const dates = ringVessel.cylinders[cylinders[0]].dates;
+  const table = el('table', { class: 'data-table' });
+  table.appendChild(el('thead', {}, [el('tr', {}, [el('th', { text: 'Tanggal' }), ...cylinders.map(c => el('th', { text: 'Unit ' + c }))])]));
+  const tbody = el('tbody');
+  dates.forEach((dstr, i) => {
+    const tr = el('tr');
+    tr.appendChild(el('td', { text: fmtDateFull(dstr) }));
+    cylinders.forEach(c => {
+      const cd = ringVessel.cylinders[c];
+      const v = cd.avg_old[i];
+      const td = el('td', { text: v === null ? '–' : v.toFixed(2) });
+      if (cd.is_replacement[i]) { td.style.color = 'var(--good-fg)'; td.style.fontWeight = '800'; }
+      else if (v != null && v > threshold) { td.style.color = 'var(--crit-fg)'; td.style.fontWeight = '800'; }
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+  return el('div', { class: 'data-table-wrap' }, [table]);
+}
+
 /* ================= isi kartu (dipakai bersama oleh kartu grid & modal pop-up) ================= */
 // Satu fungsi ini membangun legend-lokal + chart + panel Temuan/Tindakan + statistik --
 // dipakai persis sama oleh kartu di grid MAUPUN oleh modal, supaya SEMUA interaksi (legend,
@@ -669,7 +872,11 @@ function buildCardBody(metricDef, v, opts) {
   const chartWidth = opts.chartWidth || 620, chartHeight = opts.chartHeight || 210;
   const wrap = el('div', { class: 'pcard-body' });
 
-  wrap.appendChild(el('div', { class: 'pcard-sub', text: 'Semua silinder ditampilkan' }));
+  const toggleBtn = el('button', { class: 'table-toggle', text: 'Tampilkan tabel' });
+  wrap.appendChild(el('div', { class: 'pcard-subrow' }, [
+    el('div', { class: 'pcard-sub', text: 'Semua silinder ditampilkan' }),
+    toggleBtn,
+  ]));
 
   const vesselUnits = Object.keys(DATA.vessels[state.vessel].units).map(Number).sort((a, b) => a - b);
   const chartSvg = buildChart(metricDef, { width: chartWidth, height: chartHeight });
@@ -677,9 +884,17 @@ function buildCardBody(metricDef, v, opts) {
   cardRegistry.push(cardEntry);
   wrap.appendChild(buildLegendRow(vesselUnits, 'local', cardEntry));
 
-  const chartWrap = el('div', { class: 'pcard-chart' });
+  const chartWrap = el('div', { class: 'pcard-chart chart-svg-wrap' });
   chartWrap.appendChild(chartSvg);
   wrap.appendChild(chartWrap);
+
+  const tableWrap = buildMetricTable(metricDef);
+  wrap.appendChild(tableWrap);
+  toggleBtn.addEventListener('click', () => {
+    const shown = tableWrap.classList.toggle('shown');
+    chartWrap.classList.toggle('hidden-view', shown);
+    toggleBtn.textContent = shown ? 'Tampilkan grafik' : 'Tampilkan tabel';
+  });
 
   const findingBlock = el('div', { class: 'info-block' }, [
     el('div', { class: 'info-label', text: 'Temuan' }),
@@ -719,6 +934,253 @@ function buildCardBody(metricDef, v, opts) {
   return { el: wrap, cardEntry };
 }
 
+/* ================= kartu Vertical Clearance (Ring Piston) — pengukuran fisik ================= */
+/* Beda dari 7 kartu lain: sumbernya ring_data.json (pengukuran fisik langsung, per
+   kunjungan/inspeksi -- bukan laporan operasional mingguan), dan grain-nya per cylinder
+   = rata-rata 4 ring (bukan 1 nilai per cylinder). Ambang batasnya juga FISIK TETAP
+   (0.70mm dari ring_data.json.meta.threshold_mm), BUKAN relatif thd riwayat kapal seperti
+   kartu operasional lainnya -- karena ini limit mekanis, bukan proksi statistik. */
+function ringVesselData() {
+  return RING_DATA && RING_DATA.vessels[state.vessel];
+}
+
+// Aturan: rata-rata 4 ring > batas DAN laporan itu bukan laporan penggantian (avg_new
+// kosong) -> ring piston seharusnya sudah diganti. Kalau avg_new terisi (baru saja
+// diganti pada laporan itu), TIDAK ditandai -- sudah ditangani.
+function evalRingClearance(ringVessel) {
+  const threshold = RING_DATA.meta.threshold_mm;
+  const cylinders = Object.keys(ringVessel.cylinders).sort((a, b) => a - b);
+  const findings = [];
+  cylinders.forEach(c => {
+    const cd = ringVessel.cylinders[c];
+    const i = cd.dates.length - 1; // laporan/pengukuran terakhir
+    const avgOld = cd.avg_old[i], avgNew = cd.avg_new[i];
+    if (avgOld != null && avgOld > threshold && avgNew == null) {
+      findings.push({ cyl: c, avgOld, dateLabel: fmtDateFull(cd.dates[i]) });
+    }
+  });
+  return findings;
+}
+
+function buildRingChart(ringVessel, opts) {
+  opts = opts || {};
+  const W = opts.width || 620, H = opts.height || 210;
+  const padL = 46, padR = 14, padT = 10, padB = 26;
+  const plotW = W - padL - padR, plotH = H - padT - padB;
+  const threshold = RING_DATA.meta.threshold_mm;
+
+  const cylinders = Object.keys(ringVessel.cylinders).map(Number).sort((a, b) => a - b);
+  const dates = ringVessel.cylinders[cylinders[0]].dates;
+  const dateMs = dates.map(parseMs);
+
+  let vmin = Infinity, vmax = threshold;
+  cylinders.forEach(c => (ringVessel.cylinders[c].avg_old || []).forEach(v => { if (v != null) { vmin = Math.min(vmin, v); vmax = Math.max(vmax, v); } }));
+  if (!isFinite(vmin)) vmin = 0;
+  const padV = (vmax - vmin) * 0.15 || 0.1;
+  const yMin = Math.max(0, vmin - padV), yMax = vmax + padV;
+  const xMs0 = dateMs[0], xMs1 = dateMs[dateMs.length - 1];
+  const xScale = ms => padL + (xMs1 === xMs0 ? 0 : (ms - xMs0) / (xMs1 - xMs0)) * plotW;
+  const yScale = v => padT + plotH - ((v - yMin) / (yMax - yMin)) * plotH;
+
+  const svg = svgEl('svg', { class: 'chart-svg', viewBox: `0 0 ${W} ${H}`, role: 'img', 'aria-label': 'Vertical clearance ring piston per cylinder terhadap waktu' });
+
+  niceTicks(yMin, yMax, 4).forEach(t => {
+    if (t < yMin || t > yMax) return;
+    const y = yScale(t);
+    svg.appendChild(svgEl('line', { class: 'gridline', x1: padL, x2: W - padR, y1: y, y2: y }));
+    const txt = svgEl('text', { class: 'axis-tick', x: padL - 6, y: y + 3, 'text-anchor': 'end' });
+    txt.textContent = t.toFixed(2);
+    svg.appendChild(txt);
+  });
+  const xTickCount = 5;
+  for (let i = 0; i < xTickCount; i++) {
+    const ms = xMs0 + (xMs1 - xMs0) * (i / (xTickCount - 1));
+    const x = xScale(ms);
+    const txt = svgEl('text', { class: 'axis-tick', x, y: H - 6, 'text-anchor': i === 0 ? 'start' : i === xTickCount - 1 ? 'end' : 'middle' });
+    txt.textContent = fmtDateShort(ms);
+    svg.appendChild(txt);
+  }
+  svg.appendChild(svgEl('line', { class: 'baseline', x1: padL, x2: W - padR, y1: padT + plotH, y2: padT + plotH }));
+
+  // batas fisik -- garis putus-putus merah, bukan hairline abu seperti gridline biasa
+  svg.appendChild(svgEl('line', { x1: padL, x2: W - padR, y1: yScale(threshold), y2: yScale(threshold), stroke: 'var(--crit-bar)', 'stroke-width': 1.4, 'stroke-dasharray': '4 3' }));
+  const thLbl = svgEl('text', { class: 'axis-tick', x: W - padR, y: yScale(threshold) - 4, 'text-anchor': 'end' });
+  thLbl.textContent = 'batas ' + threshold.toFixed(2) + 'mm';
+  thLbl.style.fill = 'var(--crit-fg)'; thLbl.style.fontWeight = '700';
+  svg.appendChild(thLbl);
+
+  cylinders.forEach(c => {
+    const slot = unitSlot(c);
+    const cd = ringVessel.cylinders[c];
+    let d = '';
+    dateMs.forEach((ms, i) => {
+      const v = cd.avg_old[i];
+      if (v === null) return;
+      d += (d === '' ? 'M' : 'L') + xScale(ms).toFixed(2) + ' ' + yScale(v).toFixed(2) + ' ';
+    });
+    svg.appendChild(svgEl('path', { class: 'series-line', d, stroke: `var(--series-${slot})`, 'data-unit-id': String(c) }));
+    dateMs.forEach((ms, i) => {
+      if (!cd.is_replacement[i]) return;
+      const icon = svgEl('text', { x: xScale(ms), y: padT - 2, 'text-anchor': 'middle', 'font-size': 11, 'data-unit-id': String(c) });
+      icon.textContent = '🔧';
+      svg.appendChild(icon);
+    });
+  });
+
+  const crosshair = svgEl('line', { class: 'crosshair', x1: padL, x2: padL, y1: padT, y2: padT + plotH, opacity: 0 });
+  svg.appendChild(crosshair);
+  const dotsGroup = svgEl('g', { opacity: 0 });
+  const dots = {};
+  cylinders.forEach(c => {
+    const dot = svgEl('circle', { r: 4, fill: `var(--series-${unitSlot(c)})`, stroke: 'var(--panel)', 'stroke-width': 2, 'data-unit-id': String(c), class: 'series-dot' });
+    dots[c] = dot; dotsGroup.appendChild(dot);
+  });
+  svg.appendChild(dotsGroup);
+
+  const hitRect = svgEl('rect', { class: 'hit-rect', x: padL, y: padT, width: plotW, height: plotH });
+  svg.addEventListener('pointermove', evt => {
+    const rect = svg.getBoundingClientRect();
+    const scaleX = W / rect.width;
+    const localX = (evt.clientX - rect.left) * scaleX;
+    const t = Math.max(0, Math.min(1, (localX - padL) / plotW));
+    const targetMs = xMs0 + t * (xMs1 - xMs0);
+    let idx = 0, best = Infinity;
+    dateMs.forEach((ms, i) => { const dd = Math.abs(ms - targetMs); if (dd < best) { best = dd; idx = i; } });
+    const x = xScale(dateMs[idx]);
+    crosshair.setAttribute('x1', x); crosshair.setAttribute('x2', x); crosshair.setAttribute('opacity', 1);
+    dotsGroup.setAttribute('opacity', 1);
+    const rows = [];
+    cylinders.forEach(c => {
+      const cd = ringVessel.cylinders[c];
+      const v = cd.avg_old[idx];
+      const dot = dots[c];
+      if (v === null) dot.setAttribute('opacity', 0);
+      else { dot.setAttribute('opacity', 1); dot.setAttribute('cx', x); dot.setAttribute('cy', yScale(v)); }
+      let flag = cd.is_replacement[idx] ? 'ring diganti' : '';
+      rows.push({ color: `var(--series-${unitSlot(c)})`, label: 'Unit ' + c, value: v === null ? '–' : v.toFixed(2) + ' mm', flag });
+    });
+    showTooltip(evt.clientX, evt.clientY, fmtDateFull(dates[idx]), rows);
+  });
+  svg.addEventListener('pointerleave', () => { crosshair.setAttribute('opacity', 0); dotsGroup.setAttribute('opacity', 0); hideTooltip(); });
+  svg.appendChild(hitRect);
+  return svg;
+}
+
+function buildRingCardBody(ringVessel, findings, opts) {
+  opts = opts || {};
+  const threshold = RING_DATA.meta.threshold_mm;
+  const wrap = el('div', { class: 'pcard-body' });
+  const toggleBtn = el('button', { class: 'table-toggle', text: 'Tampilkan tabel' });
+  wrap.appendChild(el('div', { class: 'pcard-subrow' }, [
+    el('div', { class: 'pcard-sub', text: 'Rata-rata 4 ring per cylinder · pengukuran fisik langsung' }),
+    toggleBtn,
+  ]));
+
+  const cylinders = Object.keys(ringVessel.cylinders).map(Number).sort((a, b) => a - b);
+  const chartSvg = buildRingChart(ringVessel, { width: opts.chartWidth || 620, height: opts.chartHeight || 210 });
+  const cardEntry = { svg: chartSvg, local: { hoveredUnit: null, isolatedUnit: null } };
+  cardRegistry.push(cardEntry);
+  wrap.appendChild(buildLegendRow(cylinders, 'local', cardEntry));
+
+  const chartWrap = el('div', { class: 'pcard-chart chart-svg-wrap' });
+  chartWrap.appendChild(chartSvg);
+  wrap.appendChild(chartWrap);
+
+  const tableWrap = buildRingTable(ringVessel);
+  wrap.appendChild(tableWrap);
+  toggleBtn.addEventListener('click', () => {
+    const shown = tableWrap.classList.toggle('shown');
+    chartWrap.classList.toggle('hidden-view', shown);
+    toggleBtn.textContent = shown ? 'Tampilkan grafik' : 'Tampilkan tabel';
+  });
+
+  let headline, body, action;
+  if (findings.length) {
+    const units = findings.map(f => f.cyl);
+    headline = `${fmtUnitList(units)}: rata-rata clearance ring piston melebihi batas ${threshold.toFixed(2)}mm.`;
+    body = findings.map(f => `Unit ${f.cyl}: ${f.avgOld.toFixed(2)}mm (pengukuran ${f.dateLabel})`).join(' · ');
+    action = `Ganti ring piston ${fmtUnitList(units)} — vertical clearance sudah melebihi batas aman, ring baru belum tercatat pada pengukuran terakhir.`;
+  } else {
+    headline = `Semua cylinder dalam batas aman (≤${threshold.toFixed(2)}mm).`;
+    body = 'Ring piston belum perlu diganti berdasarkan pengukuran terakhir.';
+    action = null;
+  }
+  const findingBlock = el('div', { class: 'info-block' }, [
+    el('div', { class: 'info-label', text: 'Temuan' }),
+    el('div', { class: 'info-headline', text: headline }),
+    body ? el('div', { class: 'info-body', text: body }) : null,
+  ]);
+  const info = el('div', { class: 'pcard-info' });
+  info.appendChild(findingBlock);
+  if (action) {
+    info.appendChild(el('div', { class: 'info-block action-block crit' }, [
+      el('div', { class: 'info-label', text: 'Tindakan' }),
+      el('div', { class: 'info-headline', text: action }),
+    ]));
+  } else {
+    info.appendChild(el('div', { class: 'info-block' }, [
+      el('div', { class: 'action-none', html: '&#10003; Tidak ada tindakan korektif.' }),
+    ]));
+  }
+  wrap.appendChild(info);
+
+  const lastDate = ringVessel.cylinders[cylinders[0]].dates.slice(-1)[0];
+  wrap.appendChild(el('div', { class: 'pcard-stats' }, [
+    el('div', { class: 'stat-cell' }, [el('b', { text: 'Pengukuran terakhir' }), el('span', { class: 'v', text: fmtDateFull(lastDate) })]),
+    el('div', { class: 'stat-cell' }, [el('b', { text: 'Jumlah cylinder' }), el('span', { class: 'v', text: String(cylinders.length) })]),
+    el('div', { class: 'stat-cell' }, [el('b', { text: 'Melebihi batas' }), el('span', { class: 'v', text: String(findings.length) })]),
+    el('div', { class: 'stat-cell' }, [el('b', { text: 'Batas fisik' }), el('span', { class: 'v', text: threshold.toFixed(2) + ' mm' })]),
+  ]));
+  return { el: wrap, cardEntry };
+}
+
+function renderRingCard() {
+  const ringVessel = ringVesselData();
+  const card = el('div', { class: 'pcard' });
+  const titleWrap = el('div', { class: 'pcard-title-wrap' }, [
+    el('h3', { class: 'pcard-title', text: 'Vertical Clearance (Ring Piston)' }),
+    el('span', { class: 'pcard-unit', text: 'mm' }),
+  ]);
+
+  if (!ringVessel) {
+    card.style.borderTopColor = 'var(--hair)';
+    card.appendChild(el('div', { class: 'pcard-head' }, [titleWrap]));
+    card.appendChild(el('div', { class: 'pcard-sub', text: 'Belum ada data pengukuran fisik ring piston untuk kapal ini.', style: 'padding:6px 16px 18px' }));
+    return card;
+  }
+
+  const findings = evalRingClearance(ringVessel);
+  const st = STATUS_STYLE[findings.length ? 'warning' : 'normal'];
+  card.style.borderTopColor = st.bar;
+  const pill = el('span', { class: 'status-pill' }, [document.createTextNode(st.icon + ' ' + st.label)]);
+  pill.style.background = st.bg; pill.style.color = st.fg; pill.style.borderColor = st.bar;
+  const expandBtn = el('button', { class: 'expand-btn', title: 'Perbesar kartu ini', 'aria-label': 'Perbesar kartu ini', html: '&#10529;' });
+  expandBtn.addEventListener('click', () => openRingModal());
+  card.appendChild(el('div', { class: 'pcard-head' }, [titleWrap, el('div', { class: 'pcard-actions' }, [pill, expandBtn])]));
+  card.appendChild(buildRingCardBody(ringVessel, findings, { chartWidth: 620, chartHeight: 210 }).el);
+  return card;
+}
+
+let modalRingCardEntry = null;
+function openRingModal() {
+  const ringVessel = ringVesselData();
+  if (!ringVessel) return;
+  const findings = evalRingClearance(ringVessel);
+  const st = STATUS_STYLE[findings.length ? 'warning' : 'normal'];
+
+  modalTitle.textContent = 'Vertical Clearance (Ring Piston) — ' + ringVessel.vessel_name;
+  modalSub.innerHTML = '';
+  const modalPill = el('span', { class: 'status-pill' }, [document.createTextNode(st.icon + ' ' + st.label)]);
+  modalPill.style.background = st.bg; modalPill.style.color = st.fg; modalPill.style.borderColor = st.bar;
+  modalSub.append(document.createTextNode('mm, rata-rata 4 ring · seluruh silinder  '), modalPill);
+
+  modalChartWrap.innerHTML = '';
+  const body = buildRingCardBody(ringVessel, findings, { chartWidth: 940, chartHeight: 380 });
+  modalRingCardEntry = body.cardEntry;
+  modalChartWrap.appendChild(body.el);
+  modalEl.hidden = false;
+}
+
 /* ================= modal pop-up: SATU KARTU UTUH diperbesar, bukan cuma grafiknya ================= */
 const modalEl = document.getElementById('modal');
 const modalTitle = document.getElementById('modal-title');
@@ -746,6 +1208,7 @@ function closeModal() {
   modalEl.hidden = true;
   modalChartWrap.innerHTML = '';
   if (modalCardEntry) { cardRegistry = cardRegistry.filter(e => e !== modalCardEntry); modalCardEntry = null; }
+  if (modalRingCardEntry) { cardRegistry = cardRegistry.filter(e => e !== modalRingCardEntry); modalRingCardEntry = null; }
 }
 document.getElementById('modal-close').addEventListener('click', closeModal);
 modalEl.addEventListener('click', evt => { if (evt.target === modalEl) closeModal(); });
@@ -854,6 +1317,44 @@ function renderOverview(evals, vessel) {
   // }));
 }
 
+/* ================= render: diagnosis pola lintas-parameter ================= */
+const CONFIDENCE_LABEL = { strong: 'pola cocok', ambiguous: 'ambigu — cek fisik', weak: 'lemah' };
+function renderPatternDiagnosis(vessel) {
+  const wrap = document.getElementById('pattern-section');
+  wrap.innerHTML = '';
+  wrap.appendChild(el('div', { class: 'pattern-title', text: 'Diagnosis Pola Lintas-Parameter' }));
+  // wrap.appendChild(el('div', { class: 'pattern-desc',
+  //   text: 'Bukan satu parameter sendiri-sendiri — ini kombinasi beberapa parameter sekaligus per silinder, dicocokkan ke pola penyebab yang sudah dikenal (ring/liner, injektor/timing, katup buang, fuel pump/rack, atau gejala mesin global).' }));
+
+  const { findings, globalFindings } = evalCrossPatterns(vessel);
+  const all = [...globalFindings, ...findings];
+  if (!all.length) {
+    wrap.appendChild(el('div', { class: 'pattern-empty', text: 'Tidak ada kombinasi pola yang cocok saat ini di kapal ini.' }));
+    return;
+  }
+
+  const list = el('ul', { class: 'pattern-list' });
+  all.forEach(f => {
+    const item = el('li', { class: 'pattern-item' + (f.isGlobal ? ' pattern-global-item' : '') + (f.confidence === 'ambiguous' ? ' ambiguous' : f.confidence === 'weak' ? ' weak' : '') });
+    const head = el('div', { class: 'pattern-item-head' });
+    if (!f.isGlobal) head.appendChild(el('span', { class: 'pattern-unit', text: 'Unit ' + f.unit + ' —' }));
+    head.appendChild(el('span', { class: 'pattern-cause', text: f.cause }));
+    head.appendChild(el('span', { class: 'pattern-confidence', text: CONFIDENCE_LABEL[f.confidence] || f.confidence }));
+    item.appendChild(head);
+    if (f.headline) item.appendChild(el('div', { class: 'pattern-reason', text: f.headline, style: 'font-weight:700' }));
+    item.appendChild(el('div', { class: 'pattern-reason', text: f.reason }));
+    if (f.action) {
+      const actionEl = el('div', { class: 'pattern-action' });
+      actionEl.appendChild(el('b', { text: 'Tindakan: ' }));
+      actionEl.appendChild(document.createTextNode(f.action));
+      item.appendChild(actionEl);
+    }
+    item.appendChild(el('div', { class: 'pattern-note', text: f.note }));
+    list.appendChild(item);
+  });
+  wrap.appendChild(list);
+}
+
 /* ================= legend: mode 'local' (1 kartu saja) atau 'global' (semua kartu) ================= */
 // mode 'local'  -> dipasang di dalam SATU kartu, cuma menyorot chart kartu itu (cardEntry.local).
 // mode 'global' -> dipasang sekali di puncak halaman, menyorot SEMUA kartu (state.global*).
@@ -914,8 +1415,12 @@ function renderAll() {
 
   const evals = evaluateAll(vessel);
   renderOverview(evals, vessel);
+  renderPatternDiagnosis(vessel);
   const grid = document.getElementById('card-grid');
   grid.innerHTML = '';
+  const ringCard = renderRingCard();
+  ringCard.id = 'card-ring-clearance';
+  grid.appendChild(ringCard);
   PARAMS.forEach(p => {
     const card = renderCard(p, evals[p.key]);
     card.id = 'card-' + p.key;
@@ -931,8 +1436,12 @@ document.querySelectorAll('.scale-btn').forEach(btn => {
   });
 });
 
-fetch('./data.json').then(r => r.json()).then(json => {
-  DATA = json;
+Promise.all([
+  fetch('./data.json').then(r => r.json()),
+  fetch('./ring_data.json').then(r => r.json()).catch(() => null), // opsional -- halaman tetap jalan tanpanya
+]).then(([mainJson, ringJson]) => {
+  DATA = mainJson;
+  RING_DATA = ringJson;
   renderAll();
 }).catch(err => {
   document.body.innerHTML = '<p style="font-family:system-ui;padding:40px;color:#8E2A1E">Gagal memuat data.json: ' + err.message + '</p>';
